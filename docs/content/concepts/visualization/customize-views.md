@@ -30,6 +30,8 @@ and [time series views](../../reference/types/views/time_series_view.md) use the
 Which visualizers are available is highly dependent on the specific kind of view.
 For example, the `SeriesLines` visualizer only exists for time series views — not, e.g., for 3D views.
 
+For the implementation path from entity-component schema through visualizer discovery and execution, see [From entity to visualizer](entity-visualizer-pipeline.md).
+
 For a given view, each entity's components determine which visualizers are available.
 By default, visualizers are selected for entities logged with a corresponding [archetype](../../reference/types/archetypes.md).
 For example, in a 3D view, an entity logged with the [`Points3D`](../../reference/types/archetypes/points3d.md) archetype results in the `Points3D` visualizer being selected by default.

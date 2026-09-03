@@ -31,6 +31,8 @@ This enables the [distributed logging workflows](#distributed-recordings) descri
 In its UI, the Viewer presents (logical) recordings sharing the same application ID as related.
 In particular, they share the same [blueprint](../visualization/blueprints.md).
 
+For a complete map from application and store IDs down to entities, chunks, rows, and component batches, see [Recording and blueprint storage hierarchy](storage-hierarchy.md).
+
 
 <!-- NOLINT -->
 ### Recordings on a catalog server

@@ -17,6 +17,8 @@ data associated with those entities.
 
 Entities are like folders, and components are like files.
 
+For the surrounding hierarchy, including stores, chunks, rows, and blueprint view IDs, see [Recording and blueprint storage hierarchy](storage-hierarchy.md).
+
 Additionally, the Rerun SDKs expose two additional concepts:
  * *Archetypes* are coherent set of components corresponding to primitive such as 2D points or 3D boxes. In the Rerun SDKs, archetypes take the form of builder objects that assist with the creation of such component sets. They are meant as high-level, convenience helpers that can be bypassed entirely if/when required by advanced use-cases.
  * *Encodings* are regular data structures that components occasionally rely on when fundamental data types (`float`, `uint32`, etc.) are not sufficient.

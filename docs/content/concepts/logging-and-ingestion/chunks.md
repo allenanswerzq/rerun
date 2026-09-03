@@ -7,6 +7,8 @@ description: The Arrow-backed storage unit Rerun uses internally
 A *Chunk* is the core datastructure at the heart of Rerun: it dictates how data gets logged, injected, stored, and queried.
 A basic understanding of chunks is important in order to understand why and how Rerun and its APIs work the way they work.
 
+For how chunks relate to applications, stores, entities, rows, component batches, and blueprints, see [Recording and blueprint storage hierarchy](storage-hierarchy.md).
+
 
 ## How Rerun stores data
 
@@ -187,5 +189,4 @@ Reference:
 * [🐍 Python `Chunk.from_dataframe`](https://ref.rerun.io/docs/python/stable/experimental/#rerun.chunk.Chunk.from_dataframe)
 * [🐍 Python `send_dataframe`](https://ref.rerun.io/docs/python/stable/common/columnar_api/#rerun.send_dataframe)
 * [🐍 Python `send_record_batch`](https://ref.rerun.io/docs/python/stable/common/columnar_api/#rerun.send_record_batch)
-
 

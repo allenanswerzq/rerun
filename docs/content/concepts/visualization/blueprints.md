@@ -20,6 +20,8 @@ A way to think about the Rerun View is that
 
 Both pieces are crucial. Without a recording there is nothing to show. Without a blueprint there is no way to show it. Even when you use Rerun without explicitly loading a blueprint, the Viewer creates one automatically for you.
 
+For how recording and blueprint stores share the same entity, component, row, and chunk representation, see [Recording and blueprint storage hierarchy](../logging-and-ingestion/storage-hierarchy.md).
+
 ## What blueprints control
 
 Blueprints give you complete control over the Viewer's layout and configuration:
