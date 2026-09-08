@@ -1,0 +1,20 @@
+[package]
+name = "view_events"
+version = "0.38.0-alpha.1+dev"
+edition = "2024"
+rust-version = "1.96"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[dependencies]
+rerun = { path = "../../../crates/top/rerun", default-features = false, features = [
+  "native_viewer",
+  "sdk",
+  "log_setup",
+] }
+
+mimalloc.workspace = true
+
+[dev-dependencies]
+egui_kittest.workspace = true
+re_viewer = { workspace = true, features = ["testing"] }

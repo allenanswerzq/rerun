@@ -68,7 +68,7 @@ pub use self::blueprint_helpers::{
     AppBlueprintCtx, BlueprintContext, blueprint_timeline, blueprint_timepoint_for_writes,
 };
 pub use self::blueprint_id::{
-    BlueprintId, BlueprintIdRegistry, ContainerId, GLOBAL_VIEW_ID, ViewId,
+    BlueprintId, BlueprintIdRegistry, ContainerId, GLOBAL_VIEW_ID, ViewId, blueprint_id_serde,
 };
 pub use self::cache::{
     AppCaches, Cache, CacheEntryAccess, EncodedDepthImageStatsCache, ImageDecodeCache,
@@ -143,14 +143,14 @@ pub use self::view::{
     SystemExecutionOutput, ViewClass, ViewClassExt, ViewClassLayoutPriority, ViewClassPlaceholder,
     ViewClassRegistry, ViewClassRegistryError, ViewClassUiOutput, ViewContext,
     ViewContextCollection, ViewContextSystem, ViewContextSystemOncePerFrameResult,
-    ViewEntityHighlight, ViewHighlights, ViewOutlineMasks, ViewQuery, ViewSpawnHeuristics,
-    ViewState, ViewStateExt, ViewStates, ViewSystemExecutionError, ViewSystemIdentifier,
-    ViewSystemRegistrator, ViewSystemState, ViewerDiagnostic, ViewerReportSeverity,
-    VisualizabilityConstraints, VisualizerCollection, VisualizerComponentMappings,
-    VisualizerComponentSource, VisualizerExecutionOutput, VisualizerInstruction,
-    VisualizerInstructionReport, VisualizerInstructionsPerType, VisualizerQueryInfo,
-    VisualizerReportContext, VisualizerSystem, VisualizerTypeReport, VisualizerViewReport,
-    VisualizersSectionOutput, VisualizersSectionUi,
+    ViewEntityHighlight, ViewEvent, ViewEventKind, ViewHighlights, ViewOutlineMasks, ViewQuery,
+    ViewSpawnHeuristics, ViewState, ViewStateExt, ViewStates, ViewSystemExecutionError,
+    ViewSystemIdentifier, ViewSystemRegistrator, ViewSystemState, ViewerDiagnostic,
+    ViewerReportSeverity, VisualizabilityConstraints, VisualizerCollection,
+    VisualizerComponentMappings, VisualizerComponentSource, VisualizerExecutionOutput,
+    VisualizerInstruction, VisualizerInstructionReport, VisualizerInstructionsPerType,
+    VisualizerQueryInfo, VisualizerReportContext, VisualizerSystem, VisualizerTypeReport,
+    VisualizerViewReport, VisualizersSectionOutput, VisualizersSectionUi,
 };
 pub use self::viewer_context::ViewerContext;
 pub use self::visitor_flow_control::VisitorControlFlow; // Historical reasons

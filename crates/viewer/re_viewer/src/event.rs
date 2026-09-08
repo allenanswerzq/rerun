@@ -144,14 +144,14 @@ pub enum SelectionChangeItem {
 
     /// Selected a view.
     View {
-        #[serde(with = "serde::blueprint_id")]
+        #[serde(with = "re_viewer_context::blueprint_id_serde")]
         view_id: ViewId,
         view_name: String,
     },
 
     /// Selected a container.
     Container {
-        #[serde(with = "serde::blueprint_id")]
+        #[serde(with = "re_viewer_context::blueprint_id_serde")]
         container_id: ContainerId,
         container_name: String,
     },
@@ -227,6 +227,12 @@ impl SelectionChangeItem {
 }
 
 pub type ViewerEventCallback = Rc<dyn Fn(ViewerEvent)>;
+
+/// Handles view-originated interactions separately from viewer state notifications.
+///
+/// Called synchronously on the UI thread when the view-event queue is drained, outside the renderer lock.
+/// Enqueue slow work and return promptly; responses can use the normal logging APIs.
+pub type ViewEventCallback = Rc<dyn Fn(re_viewer_context::ViewEvent)>;
 
 #[derive(Clone)]
 pub struct ViewerEventDispatcher {
@@ -377,34 +383,6 @@ mod serde {
                 Some(v) => Ok(re_log_types::Instance::from(v)),
                 None => Ok(re_log_types::Instance::ALL),
             }
-        }
-    }
-
-    pub mod blueprint_id {
-        use super::{Deserialize, Deserializer, Serializer};
-
-        pub fn serialize<S, T>(
-            v: &re_viewer_context::BlueprintId<T>,
-            serializer: S,
-        ) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-            T: re_viewer_context::BlueprintIdRegistry,
-        {
-            serializer.serialize_str(&v.uuid().to_string())
-        }
-
-        pub fn deserialize<'de, D, T>(
-            deserializer: D,
-        ) -> Result<re_viewer_context::BlueprintId<T>, D::Error>
-        where
-            D: Deserializer<'de>,
-            T: re_viewer_context::BlueprintIdRegistry,
-        {
-            let s: String = Deserialize::deserialize(deserializer)?;
-            re_sdk_types::external::uuid::Uuid::try_parse(&s)
-                .map_err(serde::de::Error::custom)
-                .map(re_viewer_context::BlueprintId::from)
         }
     }
 

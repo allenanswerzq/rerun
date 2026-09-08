@@ -68,12 +68,13 @@ pub mod blueprint;
 
 pub use app::App;
 pub(crate) use app_state::AppState;
-pub use event::{SelectionChangeItem, ViewerEvent, ViewerEventKind};
+pub use event::{SelectionChangeItem, ViewEventCallback, ViewerEvent, ViewerEventKind};
 pub use external_memory::ExternalMemoryUser;
 pub use re_async::AsyncRuntimeHandle;
 pub use re_capabilities::MainThreadToken;
 pub use re_viewer_context::{
-    CommandReceiver, CommandSender, SystemCommand, SystemCommandSender, command_channel,
+    CommandReceiver, CommandSender, SystemCommand, SystemCommandSender, ViewEvent, ViewEventKind,
+    command_channel,
 };
 pub use startup_options::{LoginOptions, StartupOptions};
 pub use ui::about_rerun_ui;

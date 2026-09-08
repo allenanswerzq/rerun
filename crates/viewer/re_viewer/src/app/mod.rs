@@ -1733,6 +1733,8 @@ impl eframe::App for App {
         // Return the `StoreHub` to the Viewer so we have it on the next frame
         self.store_hub = Some(store_hub);
 
+        self.run_pending_view_events();
+
         {
             // Check for returned screenshots:
             let screenshots: Vec<_> = ui.input(|i| {

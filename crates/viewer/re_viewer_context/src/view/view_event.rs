@@ -1,0 +1,78 @@
+use re_log_types::StoreId;
+
+use crate::ViewId;
+
+/// A view-originated interaction for the application embedding the viewer.
+///
+/// Views send these through [`crate::CommandSender::send_view_event`] when an interaction occurs.
+/// They are transient messages, not blueprint properties or logged recording data.
+/// See [`ViewEventKind`] for the supported interactions and their typed data.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ViewEvent {
+    /// Recording in which the interaction occurred.
+    pub store_id: StoreId,
+
+    /// View instance in which the interaction occurred.
+    #[serde(with = "crate::blueprint_id_serde")]
+    pub view_id: ViewId,
+
+    #[serde(flatten)]
+    pub kind: ViewEventKind,
+}
+
+impl ViewEvent {
+    pub fn new(store_id: StoreId, view_id: ViewId, kind: ViewEventKind) -> Self {
+        Self {
+            store_id,
+            view_id,
+            kind,
+        }
+    }
+}
+
+/// Explicit interactions emitted by views.
+///
+/// Add new interactions as variants with typed fields, and keep the `ViewEventKind`
+/// type in `rerun_js/web-viewer/index.ts` in sync.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type")]
+#[serde(rename_all = "snake_case")]
+pub enum ViewEventKind {
+    /// First empty event, more will follow
+    Empty,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn view_event_wire_format() {
+        let event = ViewEvent::new(
+            StoreId::recording("view_events", "test"),
+            ViewId::random(),
+            ViewEventKind::Empty,
+        );
+        let value = serde_json::to_value(&event).unwrap();
+        assert_eq!(
+            value,
+            serde_json::json!({
+                "store_id": {
+                    "kind": "Recording",
+                    "application_id": "view_events",
+                    "recording_id": "test",
+                },
+                "view_id": event.view_id.uuid().to_string(),
+                "type": "empty",
+            })
+        );
+        assert_eq!(
+            serde_json::from_value::<ViewEvent>(value.clone()).unwrap(),
+            event
+        );
+
+        let mut invalid = value;
+        invalid["type"] = serde_json::json!("unknown");
+        assert!(serde_json::from_value::<ViewEvent>(invalid).is_err());
+    }
+}

@@ -275,8 +275,24 @@ export interface AppOptions extends WebViewerOptions {
     [K in Panel]: PanelState;
   }>;
   on_viewer_event?: (event_json: string) => void;
+  on_view_event?: (event_json: string) => void;
   fullscreen?: FullscreenOptions;
 }
+
+/** A view-originated interaction, independent of {@link ViewerEvent}. */
+export type ViewEvent = {
+  store_id: {
+    kind: "Recording" | "Blueprint";
+    application_id: string;
+    recording_id: string;
+  };
+  view_id: string;
+} & ViewEventKind;
+
+/** Explicit view interactions, matching Rust's `ViewEventKind`. */
+export type ViewEventKind = {
+  type: "empty";
+};
 
 // Types are based on `crates/viewer/re_viewer/src/event.rs`.
 // Important: The event names defined here are `snake_case` versions
@@ -424,6 +440,7 @@ interface FullscreenOptions {
 }
 
 export interface WebViewerEvents extends ViewerEventMap {
+  view_event: ViewEvent;
   fullscreen: boolean;
   ready: void;
 }
@@ -593,6 +610,11 @@ export class WebViewer {
       );
     }
 
+    const on_view_event = (event_json: string) => {
+      const event: ViewEvent = JSON.parse(event_json);
+      this.#dispatch_event("view_event", event);
+    };
+
     const login = options.login
       ? {
           signed_in_url: resolveAbsoluteUrl(options.login.signed_in_url),
@@ -605,6 +627,7 @@ export class WebViewer {
       login,
       fullscreen,
       on_viewer_event,
+      on_view_event,
     });
     try {
       await this.#handle.start(this.#canvas);

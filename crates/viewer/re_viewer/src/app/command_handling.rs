@@ -37,6 +37,25 @@ enum CloseRecording {
 }
 
 impl App {
+    /// Drain a bounded batch before calling the host, leaving new events for a later drain.
+    pub(super) fn run_pending_view_events(&self) {
+        const MAX_EVENTS_PER_DRAIN: usize = 1024;
+
+        re_tracing::profile_function!();
+        let events: Vec<_> = std::iter::from_fn(|| self.command_receiver.recv_view_event())
+            .take(MAX_EVENTS_PER_DRAIN)
+            .collect();
+        if events.is_empty() {
+            return;
+        }
+        if let Some(on_view_event) = &self.startup_options.on_view_event {
+            for event in events {
+                on_view_event(event);
+            }
+        }
+        self.egui_ctx.request_repaint();
+    }
+
     pub(super) fn run_pending_system_commands(
         &mut self,
         store_hub: &mut StoreHub,

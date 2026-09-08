@@ -17,6 +17,37 @@ pub struct BlueprintId<T: BlueprintIdRegistry> {
     _registry: std::marker::PhantomData<T>,
 }
 
+/// Serde adapter for representing a [`BlueprintId`] as a UUID string.
+///
+/// Use `#[serde(with = "re_viewer_context::blueprint_id_serde")]` on a field.
+/// This works for both [`ViewId`] and [`ContainerId`] without changing their default serialization.
+pub mod blueprint_id_serde {
+    use serde::{Deserialize as _, Deserializer, Serializer};
+
+    use super::{BlueprintId, BlueprintIdRegistry};
+
+    /// Serialize a blueprint ID as a UUID string.
+    pub fn serialize<S, T>(id: &BlueprintId<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+        T: BlueprintIdRegistry,
+    {
+        serializer.serialize_str(&id.uuid().to_string())
+    }
+
+    /// Deserialize a UUID string into a blueprint ID.
+    pub fn deserialize<'de, D, T>(deserializer: D) -> Result<BlueprintId<T>, D::Error>
+    where
+        D: Deserializer<'de>,
+        T: BlueprintIdRegistry,
+    {
+        let id = String::deserialize(deserializer)?;
+        uuid::Uuid::try_parse(&id)
+            .map_err(serde::de::Error::custom)
+            .map(BlueprintId::from)
+    }
+}
+
 impl<T: BlueprintIdRegistry> re_byte_size::SizeBytes for BlueprintId<T> {
     const IS_POD: bool = true;
 
@@ -226,5 +257,64 @@ mod tests {
 
         let crossed = ContainerId::from_entity_path(&ViewId::random().as_entity_path());
         assert_eq!(crossed, ContainerId::invalid());
+    }
+
+    #[test]
+    fn test_blueprint_id_string_serde() {
+        #[derive(Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+        struct EventIds {
+            #[serde(with = "blueprint_id_serde")]
+            view_id: ViewId,
+            #[serde(with = "blueprint_id_serde")]
+            container_id: ContainerId,
+        }
+
+        let ids = EventIds {
+            view_id: ViewId::random(),
+            container_id: ContainerId::random(),
+        };
+        let value = serde_json::to_value(&ids).unwrap();
+        assert_eq!(
+            value,
+            serde_json::json!({
+                "view_id": ids.view_id.uuid().to_string(),
+                "container_id": ids.container_id.uuid().to_string(),
+            }),
+        );
+        assert_eq!(
+            serde_json::from_value::<EventIds>(value.clone()).unwrap(),
+            ids
+        );
+
+        for field in ["view_id", "container_id"] {
+            let mut invalid = value.clone();
+            invalid[field] = serde_json::json!("not-a-uuid");
+            assert!(serde_json::from_value::<EventIds>(invalid).is_err());
+        }
+    }
+
+    #[test]
+    fn test_blueprint_id_default_serde_is_unchanged() {
+        let view_id = ViewId::random();
+        let view_value = serde_json::to_value(view_id).unwrap();
+        assert_eq!(
+            view_value,
+            serde_json::json!({ "id": view_id.uuid().to_string() })
+        );
+        assert_eq!(
+            serde_json::from_value::<ViewId>(view_value).unwrap(),
+            view_id
+        );
+
+        let container_id = ContainerId::random();
+        let container_value = serde_json::to_value(container_id).unwrap();
+        assert_eq!(
+            container_value,
+            serde_json::json!({ "id": container_id.uuid().to_string() })
+        );
+        assert_eq!(
+            serde_json::from_value::<ContainerId>(container_value).unwrap(),
+            container_id
+        );
     }
 }

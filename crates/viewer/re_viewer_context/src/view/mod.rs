@@ -14,6 +14,7 @@ mod view_class_placeholder;
 mod view_class_registry;
 mod view_context;
 mod view_context_system;
+mod view_event;
 mod view_query;
 mod view_states;
 mod visualizability_constraints;
@@ -41,6 +42,7 @@ pub use view_context::ViewContext;
 pub use view_context_system::{
     ViewContextCollection, ViewContextSystem, ViewContextSystemOncePerFrameResult, ViewSystemState,
 };
+pub use view_event::{ViewEvent, ViewEventKind};
 pub use view_query::{
     DataResult, RecommendedMappings, ViewQuery, VisualizerComponentMappings,
     VisualizerComponentSource, VisualizerInstruction, VisualizerInstructionsPerType,

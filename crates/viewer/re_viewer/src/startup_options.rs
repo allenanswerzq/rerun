@@ -1,5 +1,5 @@
 use crate::app_blueprint::PanelStateOverrides;
-use crate::event::ViewerEventCallback;
+use crate::event::{ViewEventCallback, ViewerEventCallback};
 
 /// `OAuth` login configuration for the web viewer.
 ///
@@ -65,6 +65,9 @@ pub struct StartupOptions {
 
     /// External interactions with the Viewer host (JS, custom egui app, notebook, etc.).
     pub on_event: Option<ViewerEventCallback>,
+
+    /// One-shot interactions queued with [`re_viewer_context::CommandSender::send_view_event`].
+    pub on_view_event: Option<ViewEventCallback>,
 
     /// Fullscreen is handled by JS on web.
     ///
@@ -190,6 +193,7 @@ impl Default for StartupOptions {
             video_decoder_hw_acceleration: None,
 
             on_event: None,
+            on_view_event: None,
 
             #[cfg(target_arch = "wasm32")]
             fullscreen_options: Default::default(),

@@ -749,6 +749,7 @@ pub struct AppOptions {
     url: Option<StringOrStringArray>,
     panel_state_overrides: Option<PanelStateOverrides>,
     on_viewer_event: Option<Callback>,
+    on_view_event: Option<Callback>,
     fullscreen: Option<FullscreenOptions>,
 }
 
@@ -809,6 +810,7 @@ fn create_app(
         hide_welcome_screen,
         panel_state_overrides,
         on_viewer_event,
+        on_view_event,
         fullscreen,
         enable_history,
 
@@ -855,6 +857,17 @@ fn create_app(
                 };
                 on_event.call1(&JsValue::from_str(&event)).ok_or_log_error();
             }) as crate::event::ViewerEventCallback
+        }),
+
+        on_view_event: on_view_event.map(|on_view_event| {
+            Rc::new(move |event: crate::ViewEvent| {
+                let Some(event) = serde_json::to_string(&event).ok_or_log_error() else {
+                    return;
+                };
+                on_view_event
+                    .call1(&JsValue::from_str(&event))
+                    .ok_or_log_error();
+            }) as crate::ViewEventCallback
         }),
 
         fullscreen_options: fullscreen.clone(),

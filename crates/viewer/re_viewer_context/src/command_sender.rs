@@ -9,7 +9,7 @@ use re_log_types::StoreId;
 use re_ui::{RecordingCommand, RecordingCommandSender, UICommand, UICommandSender};
 
 use crate::time_control::TimeControlCommand;
-use crate::{AuthContext, RecordingOrLocalTable, Route, ScreenshotTarget, ViewId};
+use crate::{AuthContext, RecordingOrLocalTable, Route, ScreenshotTarget, ViewEvent, ViewId};
 
 // ----------------------------------------------------------------------------
 
@@ -298,6 +298,7 @@ pub struct CommandSender {
     system_sender: crossbeam::channel::Sender<(StaticLocation, SystemCommand)>,
     ui_sender: crossbeam::channel::Sender<UICommand>,
     recording_sender: crossbeam::channel::Sender<RecordingCommand>,
+    view_event_sender: crossbeam::channel::Sender<ViewEvent>,
 }
 
 /// Receiver for the [`CommandSender`]
@@ -305,6 +306,17 @@ pub struct CommandReceiver {
     system_receiver: crossbeam::channel::Receiver<(StaticLocation, SystemCommand)>,
     ui_receiver: crossbeam::channel::Receiver<UICommand>,
     recording_receiver: crossbeam::channel::Receiver<RecordingCommand>,
+    view_event_receiver: crossbeam::channel::Receiver<ViewEvent>,
+}
+
+impl CommandSender {
+    /// Queue a view interaction for the embedding application's `on_view_event` callback.
+    ///
+    /// Sending does not invoke host code or request a repaint.
+    /// Callers outside the UI pass must separately wake the viewer.
+    pub fn send_view_event(&self, event: ViewEvent) {
+        re_quota_channel::send_crossbeam(&self.view_event_sender, event).ok();
+    }
 }
 
 impl CommandReceiver {
@@ -330,6 +342,11 @@ impl CommandReceiver {
         // is if the sender has been dropped.
         self.recording_receiver.try_recv().ok()
     }
+
+    /// Receive a view interaction if one is queued, without blocking.
+    pub fn recv_view_event(&self) -> Option<ViewEvent> {
+        self.view_event_receiver.try_recv().ok()
+    }
 }
 
 /// Creates a new command channel.
@@ -340,16 +357,19 @@ pub fn command_channel() -> (CommandSender, CommandReceiver) {
     let (system_sender, system_receiver) = crossbeam::channel::unbounded();
     let (ui_sender, ui_receiver) = crossbeam::channel::unbounded();
     let (recording_sender, recording_receiver) = crossbeam::channel::unbounded();
+    let (view_event_sender, view_event_receiver) = crossbeam::channel::unbounded();
     (
         CommandSender {
             system_sender,
             ui_sender,
             recording_sender,
+            view_event_sender,
         },
         CommandReceiver {
             system_receiver,
             ui_receiver,
             recording_receiver,
+            view_event_receiver,
         },
     )
 }
