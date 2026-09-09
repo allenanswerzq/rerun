@@ -13,7 +13,7 @@ mod parse_path;
 
 pub use component_path::ComponentPath;
 pub use data_path::DataPath;
-pub use entity_path::{EntityPath, EntityPathHash};
+pub use entity_path::{EntityPath, EntityPathHash, entity_path_serde};
 pub use entity_path_filter::{
     EntityPathFilter, EntityPathFilterError, EntityPathRule, EntityPathSubs, FilterEvaluation,
     ResolvedEntityPathFilter, ResolvedEntityPathRule, RuleEffect,

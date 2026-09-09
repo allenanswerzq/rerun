@@ -205,7 +205,12 @@ fn package_name_of(definitions_dir: &Utf8Path, filepath: &Utf8Path) -> Option<St
     if dir.as_str().is_empty() {
         return None;
     }
-    Some(dir.as_str().replace('/', "."))
+    Some(
+        dir.components()
+            .map(|component| component.as_str())
+            .collect::<Vec<_>>()
+            .join("."),
+    )
 }
 
 // --- Files ---
@@ -1697,6 +1702,11 @@ mod tests {
     #[test]
     fn package_name_comes_from_the_path() {
         let root = Utf8Path::new("/x/definitions");
+        let native_path = root.join("rerun").join("encodings").join("a.def.rs");
+        assert_eq!(
+            package_name_of(root, &native_path).as_deref(),
+            Some("rerun.encodings")
+        );
         assert_eq!(
             package_name_of(
                 root,

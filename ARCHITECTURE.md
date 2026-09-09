@@ -152,6 +152,7 @@ Update instructions:
 | re_view                | Types & utilities for defining View classes and communicating with the Viewport.                           |
 | re_view_bar_chart      | A View that shows a single bar chart.                                                                      |
 | re_view_dataframe      | A View that shows the data contained in entities in a table.                                               |
+| re_view_datatable      | A dense grouped DataTable view with sorting and typed interaction events.                                  |
 | re_view_graph          | A View that shows a graph (node-link diagram).                                                             |
 | re_view_map            | A View that shows geospatial data on a map.                                                                |
 | re_view_spatial        | Views that show entities in a 2D or 3D spatial relationship.                                               |

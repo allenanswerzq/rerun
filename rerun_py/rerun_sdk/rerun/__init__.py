@@ -121,6 +121,7 @@ from .archetypes import (
     Clear as Clear,
     CoordinateFrame as CoordinateFrame,
     Cylinders3D as Cylinders3D,
+    DataTable as DataTable,
     DepthImage as DepthImage,
     Ellipses2D as Ellipses2D,
     Ellipsoids3D as Ellipsoids3D,

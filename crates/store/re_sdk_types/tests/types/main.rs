@@ -8,6 +8,7 @@ mod asset3d;
 mod box2d;
 mod box3d;
 mod clear;
+mod data_table;
 mod depth_image;
 mod dynamic_archetype;
 #[cfg(feature = "testing")]
@@ -20,6 +21,7 @@ mod points2d;
 mod points3d;
 mod reflection;
 mod segmentation_image;
+mod table_encodings;
 mod tensor;
 mod text_document;
 mod transform3d;

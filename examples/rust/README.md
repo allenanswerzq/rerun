@@ -33,6 +33,15 @@ The datasets will be added to a subdir called `dataset`, which is in the repo-wi
 
 ## Examples
 
+### [`datatable`](datatable)
+
+`cargo run -p datatable`
+
+Launches an embedded Viewer with 100,000 rows, 24 numeric signal columns, and checkbox, symbol, and sector columns.
+The checkbox and symbol columns stay pinned on the left.
+Each model's `1d`, `3d`, or `1w` dropdown regenerates its signal data, while the host preserves checkbox selections. <!-- NOLINT -->
+Edit the constants in [src/main.rs](datatable/src/main.rs) to change the dataset size or seed; no arguments are needed.
+
 ### [`minimal`](minimal)
 
 `cargo run -p minimal`

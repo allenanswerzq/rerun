@@ -105,6 +105,7 @@ re_gamepad.workspace = true
 re_view.workspace = true
 re_view_bar_chart.workspace = true
 re_view_dataframe.workspace = true
+re_view_datatable.workspace = true
 re_view_graph.workspace = true
 re_view_spatial.workspace = true
 re_view_state_timeline.workspace = true

@@ -9,6 +9,28 @@ use re_string_interner::InternedString;
 use crate::EntityPathPart;
 use crate::hash::Hash64;
 
+/// Serde adapter for an [`EntityPath`] represented as an escaped path string.
+pub mod entity_path_serde {
+    use serde::{Deserialize as _, Deserializer, Serializer};
+
+    use super::EntityPath;
+
+    pub fn serialize<S>(path: &EntityPath, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&path.to_string())
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<EntityPath, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let path = String::deserialize(deserializer)?;
+        EntityPath::parse_strict(&path).map_err(serde::de::Error::custom)
+    }
+}
+
 // ----------------------------------------------------------------------------
 
 /// A 64 bit hash of [`EntityPath`] with very small risk of collision.

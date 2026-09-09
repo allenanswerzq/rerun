@@ -40,6 +40,25 @@ impl ViewEvent {
 pub enum ViewEventKind {
     /// First empty event, more will follow
     Empty,
+
+    /// A `DataTable` column dropdown changed.
+    DataTableColumnChanged {
+        #[serde(with = "re_log_types::entity_path_serde")]
+        entity_path: re_log_types::EntityPath,
+        group_id: String,
+        column_id: String,
+        option_id: String,
+    },
+
+    /// A `DataTable` checkbox changed, identified by its unsorted source row.
+    DataTableCheckboxChanged {
+        #[serde(with = "re_log_types::entity_path_serde")]
+        entity_path: re_log_types::EntityPath,
+        group_id: String,
+        column_id: String,
+        row_index: u64,
+        checked: bool,
+    },
 }
 
 #[cfg(test)]
@@ -74,5 +93,39 @@ mod tests {
         let mut invalid = value;
         invalid["type"] = serde_json::json!("unknown");
         assert!(serde_json::from_value::<ViewEvent>(invalid).is_err());
+    }
+
+    #[test]
+    fn data_table_event_wire_format() {
+        let variants = [
+            (
+                ViewEventKind::DataTableColumnChanged {
+                    entity_path: "table".into(),
+                    group_id: "stocks".into(),
+                    column_id: "return".into(),
+                    option_id: "week".into(),
+                },
+                "data_table_column_changed",
+            ),
+            (
+                ViewEventKind::DataTableCheckboxChanged {
+                    entity_path: "table".into(),
+                    group_id: "stocks".into(),
+                    column_id: "checked".into(),
+                    row_index: 7,
+                    checked: true,
+                },
+                "data_table_checkbox_changed",
+            ),
+        ];
+        for (kind, tag) in variants {
+            let event =
+                ViewEvent::new(StoreId::recording("tables", "test"), ViewId::random(), kind);
+            let value = serde_json::to_value(&event).unwrap();
+            assert_eq!(value["type"], tag);
+            assert_eq!(value["entity_path"], "/table");
+            assert_eq!(value["group_id"], "stocks");
+            assert_eq!(serde_json::from_value::<ViewEvent>(value).unwrap(), event);
+        }
     }
 }

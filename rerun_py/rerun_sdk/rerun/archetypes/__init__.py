@@ -14,6 +14,7 @@ from .capsules3d import Capsules3D
 from .clear import Clear
 from .coordinate_frame import CoordinateFrame
 from .cylinders3d import Cylinders3D
+from .data_table import DataTable
 from .depth_image import DepthImage
 from .ellipses2d import Ellipses2D
 from .ellipsoids3d import Ellipsoids3D
@@ -69,6 +70,7 @@ __all__ = [
     "Clear",
     "CoordinateFrame",
     "Cylinders3D",
+    "DataTable",
     "DepthImage",
     "Ellipses2D",
     "Ellipsoids3D",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .bar_chart_view import BarChartView
+from .data_table_view import DataTableView
 from .dataframe_view import DataframeView
 from .graph_view import GraphView
 from .map_view import MapView
@@ -16,6 +17,7 @@ from .time_series_view import TimeSeriesView
 
 __all__ = [
     "BarChartView",
+    "DataTableView",
     "DataframeView",
     "GraphView",
     "MapView",

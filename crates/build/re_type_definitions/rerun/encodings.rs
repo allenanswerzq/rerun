@@ -56,6 +56,20 @@ mod rgba32;
 mod rotation_axis_angle;
 #[path = "encodings/spherical_harmonics3rgb.def.rs"]
 mod spherical_harmonics3rgb;
+#[path = "encodings/table_buffer.def.rs"]
+mod table_buffer;
+#[path = "encodings/table_column_option.def.rs"]
+mod table_column_option;
+#[path = "encodings/table_column_schema.def.rs"]
+mod table_column_schema;
+#[path = "encodings/table_group.def.rs"]
+mod table_group;
+#[path = "encodings/table_schema.def.rs"]
+mod table_schema;
+#[path = "encodings/table_sort_scope.def.rs"]
+mod table_sort_scope;
+#[path = "encodings/table_value.def.rs"]
+mod table_value;
 #[path = "encodings/tensor_buffer.def.rs"]
 mod tensor_buffer;
 #[path = "encodings/tensor_data.def.rs"]
@@ -127,6 +141,13 @@ pub use self::range2d::*;
 pub use self::rgba32::*;
 pub use self::rotation_axis_angle::*;
 pub use self::spherical_harmonics3rgb::*;
+pub use self::table_buffer::*;
+pub use self::table_column_option::*;
+pub use self::table_column_schema::*;
+pub use self::table_group::*;
+pub use self::table_schema::*;
+pub use self::table_sort_scope::*;
+pub use self::table_value::*;
 pub use self::tensor_buffer::*;
 pub use self::tensor_data::*;
 pub use self::tensor_dimension_selection::*;

@@ -77,7 +77,9 @@ fn main() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap();
+        .unwrap()
+        .canonicalize_utf8()
+        .expect("Failed to resolve the codegen workspace root");
 
     assert!(
         workspace_dir.join("CODE_OF_CONDUCT.md").exists(),

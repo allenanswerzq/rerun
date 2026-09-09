@@ -94,6 +94,9 @@ from .show_labels import ShowLabels, ShowLabelsBatch
 from .spherical_harmonics3rgb import SphericalHarmonics3Rgb, SphericalHarmonics3RgbBatch
 from .spherical_harmonics_degree import SphericalHarmonicsDegree, SphericalHarmonicsDegreeBatch
 from .stroke_width import StrokeWidth, StrokeWidthBatch
+from .table_column import TableColumn, TableColumnBatch
+from .table_row import TableRow, TableRowArrayLike, TableRowBatch, TableRowLike
+from .table_schema import TableSchema, TableSchemaBatch
 from .tensor_data import TensorData, TensorDataBatch
 from .tensor_dimension_index_selection import TensorDimensionIndexSelection, TensorDimensionIndexSelectionBatch
 from .tensor_height_dimension import TensorHeightDimension, TensorHeightDimensionBatch
@@ -281,6 +284,14 @@ __all__ = [
     "SphericalHarmonicsDegreeBatch",
     "StrokeWidth",
     "StrokeWidthBatch",
+    "TableColumn",
+    "TableColumnBatch",
+    "TableRow",
+    "TableRowArrayLike",
+    "TableRowBatch",
+    "TableRowLike",
+    "TableSchema",
+    "TableSchemaBatch",
     "TensorData",
     "TensorDataBatch",
     "TensorDimensionIndexSelection",

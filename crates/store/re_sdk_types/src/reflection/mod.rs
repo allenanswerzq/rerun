@@ -1524,6 +1524,42 @@ fn generate_component_reflection() -> Result<ComponentReflectionMap, Serializati
             },
         ),
         (
+            <TableColumn as Component>::name(),
+            ComponentReflection {
+                docstring_md: "One column of a [`archetypes.DataTable`](https://rerun.io/docs/reference/types/archetypes/data_table).\n\nNumeric data must be a one-dimensional tensor.\nCheckbox columns use numeric zero for unchecked and one for checked.\n\n⚠\u{fe0f} **This type is _unstable_ and may change significantly in a way that the data won't be backwards compatible.**",
+                deprecation_summary: None,
+                custom_placeholder: None,
+                datatype: TableColumn::arrow_data_type(),
+                is_enum: false,
+                own_chunk: false,
+                verify_arrow_array: TableColumn::verify_arrow_array,
+            },
+        ),
+        (
+            <TableRow as Component>::name(),
+            ComponentReflection {
+                docstring_md: "One row of a [`archetypes.DataTable`](https://rerun.io/docs/reference/types/archetypes/data_table), in schema column order.\n\nCheckbox cells use `Number(0.0)` for unchecked and `Number(1.0)` for checked.\n\n⚠\u{fe0f} **This type is _unstable_ and may change significantly in a way that the data won't be backwards compatible.**",
+                deprecation_summary: None,
+                custom_placeholder: Some(TableRow::default().to_arrow()?),
+                datatype: TableRow::arrow_data_type(),
+                is_enum: false,
+                own_chunk: false,
+                verify_arrow_array: TableRow::verify_arrow_array,
+            },
+        ),
+        (
+            <TableSchema as Component>::name(),
+            ComponentReflection {
+                docstring_md: "The ordered groups and columns of a [`archetypes.DataTable`](https://rerun.io/docs/reference/types/archetypes/data_table).\n\nGroup IDs must be unique within the table, and column IDs must be unique within their group.\nMetadata and values are independent components; log compatible schema and data together when changing the structure.\n\n⚠\u{fe0f} **This type is _unstable_ and may change significantly in a way that the data won't be backwards compatible.**",
+                deprecation_summary: None,
+                custom_placeholder: Some(TableSchema::default().to_arrow()?),
+                datatype: TableSchema::arrow_data_type(),
+                is_enum: false,
+                own_chunk: false,
+                verify_arrow_array: TableSchema::verify_arrow_array,
+            },
+        ),
+        (
             <TensorData as Component>::name(),
             ComponentReflection {
                 docstring_md: "An N-dimensional array of numbers.\n\nThe number of dimensions and their respective lengths is specified by the `shape` field.\nThe dimensions are ordered from outermost to innermost. For example, in the common case of\na 2D RGB Image, the shape would be `[height, width, channel]`.\n\nThese dimensions are combined with an index to look up values from the `buffer` field,\nwhich stores a contiguous array of typed values.",
@@ -2437,6 +2473,38 @@ fn generate_archetype_reflection() -> ArchetypeReflectionMap {
                         component_type: "rerun.components.ClassId".into(),
                         docstring_md: "Optional class ID for the ellipsoids.\n\nThe class ID provides colors and labels if not specified explicitly.",
                         flags: ArchetypeFieldFlags::UI_EDITABLE,
+                    },
+                ],
+            },
+        ),
+        (
+            ArchetypeName::from("rerun.archetypes.DataTable"),
+            ArchetypeReflection {
+                display_name: "Data table",
+                deprecation_summary: None,
+                scope: None,
+                view_types: &["DataTableView"],
+                fields: vec![
+                    ArchetypeFieldReflection {
+                        name: "rows",
+                        display_name: "Rows",
+                        component_type: "rerun.components.TableRow".into(),
+                        docstring_md: "Row-major data, with one cell per schema column in each row.",
+                        flags: ArchetypeFieldFlags::empty(),
+                    },
+                    ArchetypeFieldReflection {
+                        name: "cols",
+                        display_name: "Cols",
+                        component_type: "rerun.components.TableColumn".into(),
+                        docstring_md: "Column-major data, with one buffer per schema column.\n\nColumn lengths may differ; the view uses the longest column as its display height and leaves missing cells blank.\nNumeric buffers must be one-dimensional tensors.",
+                        flags: ArchetypeFieldFlags::empty(),
+                    },
+                    ArchetypeFieldReflection {
+                        name: "schema",
+                        display_name: "Schema",
+                        component_type: "rerun.components.TableSchema".into(),
+                        docstring_md: "Group and column definitions for either data layout.",
+                        flags: ArchetypeFieldFlags::REQUIRED | ArchetypeFieldFlags::UI_EDITABLE,
                     },
                 ],
             },

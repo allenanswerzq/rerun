@@ -9,7 +9,7 @@ use crate::codegen::rust::util::{
     is_tuple_struct_from_obj, quote_comment, quote_default_value_for_datatype,
 };
 use crate::data_type::{AtomicDataType, DataType, UnionMode};
-use crate::{Object, Objects, TypeRegistry};
+use crate::{Object, Objects, RustAttr, TypeRegistry};
 
 // ---
 
@@ -540,7 +540,7 @@ fn quote_unwrap_options(quoted_deserializer: &TokenStream) -> TokenStream {
 ///
 /// The `datatype` comes from our compile-time Arrow registry, not from the runtime payload!
 /// If the datatype happens to be a struct or union, this will merely inject a runtime call to
-/// `FromArrowOpt::from_arrow_opt` and call it a day, preventing code bloat.
+/// its `FromArrow` or `FromArrowOpt` implementation, preventing code bloat.
 ///
 /// `data_src` is the runtime identifier of the variable holding the Arrow payload (`&dyn ::arrow::array::Array`).
 ///
@@ -984,7 +984,11 @@ fn quote_arrow_field_deserializer(
                 unreachable!()
             };
             let fqname_use = quote_fqname_as_type_path(fqname);
-            quote!(#fqname_use::from_arrow_opt(#data_src).with_context(#obj_field_fqname)?.into_iter())
+            if objects[fqname].is_attr_set(RustAttr::ArrowOpt) {
+                quote!(#fqname_use::from_arrow_opt(#data_src).with_context(#obj_field_fqname)?.into_iter())
+            } else {
+                quote!(#fqname_use::from_arrow(#data_src).with_context(#obj_field_fqname)?.into_iter().map(Some))
+            }
         }
 
         DataType::Object { .. } => unimplemented!("{datatype:#?}"),

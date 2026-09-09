@@ -37,6 +37,13 @@ Data types are the lowest layer of the data model hierarchy. They are re-usable 
 * [`Rgba32`](encodings/rgba32.md): An RGBA color with unmultiplied/separate alpha, in sRGB gamma space with linear alpha.
 * [`RotationAxisAngle`](encodings/rotation_axis_angle.md): 3D rotation represented by a rotation around a given axis.
 * [`SphericalHarmonics3Rgb`](encodings/spherical_harmonics3rgb.md): Spherical harmonics coefficients of degrees 1 through 3 for RGB, as 15 half-precision RGB triples.
+* [`TableBuffer`](encodings/table_buffer.md): A numeric tensor or an array of text values for table data.
+* [`TableColumnOption`](encodings/table_column_option.md): One dropdown option for a [`archetypes.DataTable`](https://rerun.io/docs/reference/types/archetypes/data_table) column.
+* [`TableColumnSchema`](encodings/table_column_schema.md): Header and presentation metadata for one [`archetypes.DataTable`](https://rerun.io/docs/reference/types/archetypes/data_table) column.
+* [`TableGroup`](encodings/table_group.md): A group of adjacent columns in a [`archetypes.DataTable`](https://rerun.io/docs/reference/types/archetypes/data_table).
+* [`TableSchema`](encodings/table_schema.md): The groups and display settings of a [`archetypes.DataTable`](https://rerun.io/docs/reference/types/archetypes/data_table).
+* [`TableSortScope`](encodings/table_sort_scope.md): How sorting reorders rows in a [`archetypes.DataTable`](https://rerun.io/docs/reference/types/archetypes/data_table).
+* [`TableValue`](encodings/table_value.md): A number or text value, suitable for a cell in a mixed-type table row.
 * [`TensorBuffer`](encodings/tensor_buffer.md): The underlying storage for [`archetypes.Tensor`](https://rerun.io/docs/reference/types/archetypes/tensor).
 * [`TensorData`](encodings/tensor_data.md): An N-dimensional array of numbers.
 * [`TensorDimensionIndexSelection`](encodings/tensor_dimension_index_selection.md): Indexing a specific tensor dimension.

@@ -43,14 +43,12 @@ fn create_app(
         .store_id
         .clone();
 
-    let egui_ctx = cc.egui_ctx.clone();
     recording.set_sink(Box::new(rerun::sink::CallbackSink::new(move |messages| {
         for message in messages {
             if sender.send(message.clone().into()).is_err() {
                 return;
             }
         }
-        egui_ctx.request_repaint();
     })));
     recording.log_static("host", &rerun::TextDocument::new("Received events: 0"))?;
     rerun::blueprint::Blueprint::auto().send(&recording, Default::default())?;
@@ -63,19 +61,15 @@ fn create_app(
                 return;
             }
 
-            match event.kind {
-                re_viewer::ViewEventKind::Empty => {
-                    received.set(received.get() + 1);
-                    let text = format!(
-                        "Received events: {}\n\nSource view: {}",
-                        received.get(),
-                        event.view_id
-                    );
-                    if let Err(err) =
-                        recording.log_static("host", &rerun::TextDocument::new(text))
-                    {
-                        re_log::error!("Failed to log the host response: {err}");
-                    }
+            if let re_viewer::ViewEventKind::Empty = event.kind {
+                received.set(received.get() + 1);
+                let text = format!(
+                    "Received events: {}\n\nSource view: {}",
+                    received.get(),
+                    event.view_id
+                );
+                if let Err(err) = recording.log_static("host", &rerun::TextDocument::new(text)) {
+                    re_log::error!("Failed to log the host response: {err}");
                 }
             }
         })),

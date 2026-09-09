@@ -14,6 +14,7 @@
 #include "archetypes/clear.hpp"
 #include "archetypes/coordinate_frame.hpp"
 #include "archetypes/cylinders3d.hpp"
+#include "archetypes/data_table.hpp"
 #include "archetypes/depth_image.hpp"
 #include "archetypes/ellipses2d.hpp"
 #include "archetypes/ellipsoids3d.hpp"

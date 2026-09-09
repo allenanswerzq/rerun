@@ -128,7 +128,7 @@ pub enum SelectionChangeItem {
     /// If the entity was selected within a 2D or 3D space view,
     /// then this also includes the position.
     Entity {
-        #[serde(with = "serde::entity_path")]
+        #[serde(with = "re_log_types::entity_path_serde")]
         entity_path: re_log_types::EntityPath,
 
         #[serde(with = "serde::instance_id")]
@@ -344,25 +344,6 @@ fn instance_is_all(v: &re_log_types::Instance) -> bool {
 /// useful "as-is" in those languages.
 mod serde {
     pub use ::serde::{Deserialize, Deserializer, Serialize, Serializer};
-
-    pub mod entity_path {
-        use super::{Deserialize, Deserializer, Serializer};
-
-        pub fn serialize<S>(v: &re_log_types::EntityPath, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-        {
-            serializer.serialize_str(&v.to_string())
-        }
-
-        pub fn deserialize<'de, D>(deserializer: D) -> Result<re_log_types::EntityPath, D::Error>
-        where
-            D: Deserializer<'de>,
-        {
-            let s: String = Deserialize::deserialize(deserializer)?;
-            re_log_types::EntityPath::parse_strict(&s).map_err(serde::de::Error::custom)
-        }
-    }
 
     pub mod instance_id {
         use super::{Deserialize, Deserializer, Serialize, Serializer};

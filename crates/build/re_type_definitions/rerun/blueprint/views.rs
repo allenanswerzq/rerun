@@ -2,6 +2,8 @@
 
 #[path = "views/bar_chart.def.rs"]
 mod bar_chart;
+#[path = "views/data_table.def.rs"]
+mod data_table;
 #[path = "views/dataframe.def.rs"]
 mod dataframe;
 #[path = "views/graph.def.rs"]
@@ -24,6 +26,7 @@ mod text_log;
 mod time_series;
 
 pub use self::bar_chart::*;
+pub use self::data_table::*;
 pub use self::dataframe::*;
 pub use self::graph::*;
 pub use self::map::*;

@@ -76,6 +76,9 @@ on [Entities and Components](../../concepts/logging-and-ingestion/entity-compone
 * [`SphericalHarmonics3Rgb`](components/spherical_harmonics3rgb.md): View-dependent color, expressed as spherical harmonics coefficients of degrees 1 through 3.
 * [`SphericalHarmonicsDegree`](components/spherical_harmonics_degree.md): The highest spherical harmonics degree to evaluate when rendering, 0-3.
 * [`StrokeWidth`](components/stroke_width.md): The width of a stroke specified in UI points.
+* [`TableColumn`](components/table_column.md): One column of a [`archetypes.DataTable`](https://rerun.io/docs/reference/types/archetypes/data_table).
+* [`TableRow`](components/table_row.md): One row of a [`archetypes.DataTable`](https://rerun.io/docs/reference/types/archetypes/data_table), in schema column order.
+* [`TableSchema`](components/table_schema.md): The ordered groups and columns of a [`archetypes.DataTable`](https://rerun.io/docs/reference/types/archetypes/data_table).
 * [`TensorData`](components/tensor_data.md): An N-dimensional array of numbers.
 * [`TensorDimensionIndexSelection`](components/tensor_dimension_index_selection.md): Specifies a concrete index on a tensor dimension.
 * [`TensorHeightDimension`](components/tensor_height_dimension.md): Specifies which dimension to use for height.

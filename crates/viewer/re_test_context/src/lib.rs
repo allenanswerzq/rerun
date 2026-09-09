@@ -852,6 +852,11 @@ impl TestContext {
         }
     }
 
+    /// Drain view-originated events for interaction assertions.
+    pub fn take_view_events(&self) -> Vec<re_viewer_context::ViewEvent> {
+        std::iter::from_fn(|| self.command_receiver.recv_view_event()).collect()
+    }
+
     /// Best-effort attempt to meaningfully handle some of the system commands.
     pub fn handle_system_commands(&self, egui_ctx: &egui::Context) {
         while let Some((_from_where, command)) = self.command_receiver.recv_system() {

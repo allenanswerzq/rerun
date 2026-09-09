@@ -124,6 +124,12 @@ mod spherical_harmonics3rgb;
 mod spherical_harmonics_degree;
 #[path = "components/stroke_width.def.rs"]
 mod stroke_width;
+#[path = "components/table_column.def.rs"]
+mod table_column;
+#[path = "components/table_row.def.rs"]
+mod table_row;
+#[path = "components/table_schema.def.rs"]
+mod table_schema;
 #[path = "components/tensor_data.def.rs"]
 mod tensor_data;
 #[path = "components/tensor_dimension_selection.def.rs"]
@@ -235,6 +241,9 @@ pub use self::show_labels::*;
 pub use self::spherical_harmonics_degree::*;
 pub use self::spherical_harmonics3rgb::*;
 pub use self::stroke_width::*;
+pub use self::table_column::*;
+pub use self::table_row::*;
+pub use self::table_schema::*;
 pub use self::tensor_data::*;
 pub use self::tensor_dimension_selection::*;
 pub use self::texcoord2d::*;

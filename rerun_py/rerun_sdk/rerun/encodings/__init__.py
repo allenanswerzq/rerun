@@ -51,6 +51,23 @@ from .spherical_harmonics3rgb import (
     SphericalHarmonics3RgbBatch,
     SphericalHarmonics3RgbLike,
 )
+from .table_buffer import TableBuffer, TableBufferArrayLike, TableBufferBatch, TableBufferLike
+from .table_column_option import (
+    TableColumnOption,
+    TableColumnOptionArrayLike,
+    TableColumnOptionBatch,
+    TableColumnOptionLike,
+)
+from .table_column_schema import (
+    TableColumnSchema,
+    TableColumnSchemaArrayLike,
+    TableColumnSchemaBatch,
+    TableColumnSchemaLike,
+)
+from .table_group import TableGroup, TableGroupArrayLike, TableGroupBatch, TableGroupLike
+from .table_schema import TableSchema, TableSchemaArrayLike, TableSchemaBatch, TableSchemaLike
+from .table_sort_scope import TableSortScope, TableSortScopeArrayLike, TableSortScopeBatch, TableSortScopeLike
+from .table_value import TableValue, TableValueArrayLike, TableValueBatch, TableValueLike
 from .tensor_buffer import TensorBuffer, TensorBufferArrayLike, TensorBufferBatch, TensorBufferLike
 from .tensor_data import TensorData, TensorDataArrayLike, TensorDataBatch, TensorDataLike
 from .tensor_dimension_index_selection import (
@@ -207,6 +224,34 @@ __all__ = [
     "SphericalHarmonics3RgbArrayLike",
     "SphericalHarmonics3RgbBatch",
     "SphericalHarmonics3RgbLike",
+    "TableBuffer",
+    "TableBufferArrayLike",
+    "TableBufferBatch",
+    "TableBufferLike",
+    "TableColumnOption",
+    "TableColumnOptionArrayLike",
+    "TableColumnOptionBatch",
+    "TableColumnOptionLike",
+    "TableColumnSchema",
+    "TableColumnSchemaArrayLike",
+    "TableColumnSchemaBatch",
+    "TableColumnSchemaLike",
+    "TableGroup",
+    "TableGroupArrayLike",
+    "TableGroupBatch",
+    "TableGroupLike",
+    "TableSchema",
+    "TableSchemaArrayLike",
+    "TableSchemaBatch",
+    "TableSchemaLike",
+    "TableSortScope",
+    "TableSortScopeArrayLike",
+    "TableSortScopeBatch",
+    "TableSortScopeLike",
+    "TableValue",
+    "TableValueArrayLike",
+    "TableValueBatch",
+    "TableValueLike",
     "TensorBuffer",
     "TensorBufferArrayLike",
     "TensorBufferBatch",

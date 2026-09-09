@@ -24,6 +24,8 @@ mod clear;
 mod coordinate_frame;
 #[path = "archetypes/cylinders3d.def.rs"]
 mod cylinders3d;
+#[path = "archetypes/datatable.def.rs"]
+mod datatable;
 #[path = "archetypes/depth_image.def.rs"]
 mod depth_image;
 #[path = "archetypes/ellipses2d.def.rs"]
@@ -119,6 +121,7 @@ pub use self::capsules3d::*;
 pub use self::clear::*;
 pub use self::coordinate_frame::*;
 pub use self::cylinders3d::*;
+pub use self::datatable::*;
 pub use self::depth_image::*;
 pub use self::ellipses2d::*;
 pub use self::ellipsoids3d::*;

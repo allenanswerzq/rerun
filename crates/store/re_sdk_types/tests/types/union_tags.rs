@@ -39,6 +39,14 @@ fn union_type_ids_are_stable() {
     3 = Infinite: Null
 
     0 = _null_markers: Null
+    1 = Number: Float64
+    2 = Text: Utf8
+
+    0 = _null_markers: Null
+    1 = Numeric: Struct
+    2 = Text: List
+
+    0 = _null_markers: Null
     1 = U8: List
     2 = U16: List
     3 = U32: List

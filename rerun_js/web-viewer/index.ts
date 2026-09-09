@@ -290,9 +290,23 @@ export type ViewEvent = {
 } & ViewEventKind;
 
 /** Explicit view interactions, matching Rust's `ViewEventKind`. */
-export type ViewEventKind = {
-  type: "empty";
-};
+export type ViewEventKind =
+  | { type: "empty" }
+  | {
+      type: "data_table_column_changed";
+      entity_path: string;
+      group_id: string;
+      column_id: string;
+      option_id: string;
+    }
+  | {
+      type: "data_table_checkbox_changed";
+      entity_path: string;
+      group_id: string;
+      column_id: string;
+      row_index: number;
+      checked: boolean;
+    };
 
 // Types are based on `crates/viewer/re_viewer/src/event.rs`.
 // Important: The event names defined here are `snake_case` versions

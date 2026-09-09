@@ -65,4 +65,5 @@ Struct(
 
 ## Used by
 
+* [`TableBuffer`](../encodings/table_buffer.md)
 * [`TensorData`](../components/tensor_data.md)
