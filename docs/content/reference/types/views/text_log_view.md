@@ -15,6 +15,9 @@ The columns to display in the view.
 * `text_log_columns`: All columns to be displayed.
 ### `rows`
 Filter for rows to display in the view.
+
+* `filter_by_log_level`: Log levels to display.
+* `newest_first`: Whether to show the newest log entries first.
 ### `format_options`
 Formatting options for the text log view.
 

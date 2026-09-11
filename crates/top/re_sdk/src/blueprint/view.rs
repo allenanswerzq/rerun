@@ -6,8 +6,8 @@ use uuid::Uuid;
 use re_log_types::EntityPath;
 use re_sdk_types::blueprint::archetypes::{
     ActiveVisualizers, ForceCenter, ForceCollisionRadius, ForceLink, ForceManyBody, ForcePosition,
-    GraphBackground, MapBackground, ViewBlueprint, ViewContents, VisualBounds2D,
-    VisualizerInstruction,
+    GraphBackground, MapBackground, TextLogColumns, TextLogRows, ViewBlueprint, ViewContents,
+    VisualBounds2D, VisualizerInstruction,
 };
 use re_sdk_types::blueprint::components::{QueryExpression, ViewClass};
 use re_sdk_types::components::{Name, Visible};
@@ -512,6 +512,38 @@ impl GraphView {
     }
 }
 
+/// Data table view for grouped [`re_sdk_types::archetypes::DataTable`] data.
+pub struct DataTableView(pub(crate) View);
+
+impl DataTableView {
+    /// Create a new data table view.
+    pub fn new(name: impl Into<String>) -> Self {
+        Self(View {
+            class_identifier: "DataTable".into(),
+            name: Some(name.into()),
+            ..Default::default()
+        })
+    }
+
+    /// Set the origin entity path.
+    pub fn with_origin(mut self, origin: impl Into<EntityPath>) -> Self {
+        self.0.origin = origin.into();
+        self
+    }
+
+    /// Set the contents query expressions.
+    pub fn with_contents(mut self, queries: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.0.contents = queries.into_iter().map(Into::into).collect();
+        self
+    }
+
+    /// Set visibility.
+    pub fn with_visible(mut self, visible: bool) -> Self {
+        self.0.visible = Some(visible);
+        self
+    }
+}
+
 /// Text log view, for use with [`re_sdk_types::archetypes::TextLog`].
 pub struct TextLogView(pub(crate) View);
 
@@ -540,6 +572,21 @@ impl TextLogView {
     /// Set visibility.
     pub fn with_visible(mut self, visible: bool) -> Self {
         self.0.visible = Some(visible);
+        self
+    }
+
+    /// Show the newest log entries at the top of the view.
+    pub fn with_newest_first(mut self, newest_first: bool) -> Self {
+        self.0.add_property(
+            "TextLogRows",
+            &TextLogRows::new().with_newest_first(newest_first),
+        );
+        self
+    }
+
+    /// Configure the timeline and text-log columns shown by the view.
+    pub fn with_columns(mut self, columns: TextLogColumns) -> Self {
+        self.0.add_property("TextLogColumns", &columns);
         self
     }
 

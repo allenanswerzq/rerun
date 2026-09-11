@@ -37,6 +37,13 @@ pub struct TableSchema {
 
     /// Number of leading columns kept visible while scrolling; defaults to one.
     pub sticky_columns: Option<u32>,
+
+    /// One-based summary rows that start visual row groups.
+    ///
+    /// For example, `[1, 10, 20]` creates groups `[1, 10)`, `[10, 20)`, and `[20, …)`.
+    /// Groups are collapsed by default, leaving each summary row visible with a disclosure control.
+    /// Sorting orders whole groups by their summary values and therefore uses table-wide scope.
+    pub row_groups: Option<::arrow::buffer::ScalarBuffer<u64>>,
 }
 
 ::re_types_core::macros::impl_into_cow!(TableSchema);
@@ -61,6 +68,15 @@ impl ::re_types_core::ArrowDataType for TableSchema {
                 true,
             ),
             Field::new("sticky_columns", DataType::UInt32, true),
+            Field::new(
+                "row_groups",
+                DataType::List(std::sync::Arc::new(Field::new(
+                    "item",
+                    DataType::UInt64,
+                    false,
+                ))),
+                true,
+            ),
         ]))
     }
 }
@@ -95,6 +111,15 @@ impl ::re_types_core::ToArrow for TableSchema {
                     true,
                 ),
                 Field::new("sticky_columns", DataType::UInt32, true),
+                Field::new(
+                    "row_groups",
+                    DataType::List(std::sync::Arc::new(Field::new(
+                        "item",
+                        DataType::UInt64,
+                        false,
+                    ))),
+                    true,
+                ),
             ]);
             let data: Vec<_> = data
                 .into_iter()
@@ -180,6 +205,43 @@ impl ::re_types_core::ToArrow for TableSchema {
                                 .collect(),
                             sticky_columns_validity,
                         ))
+                    },
+                    {
+                        let (somes, row_groups): (Vec<_>, Vec<_>) = data
+                            .iter()
+                            .map(|datum| {
+                                let datum = Some(datum.row_groups.clone()).flatten();
+                                (datum.is_some(), datum)
+                            })
+                            .unzip();
+                        let row_groups_validity: Option<arrow::buffer::NullBuffer> = {
+                            let any_nones = somes.iter().any(|some| !*some);
+                            any_nones.then(|| somes.into())
+                        };
+                        {
+                            let offsets = arrow::buffer::OffsetBuffer::<i32>::from_lengths(
+                                row_groups
+                                    .iter()
+                                    .map(|opt| opt.as_ref().map_or(0, |datum| datum.len())),
+                            );
+                            let row_groups_inner_data: ScalarBuffer<_> = row_groups
+                                .iter()
+                                .flatten()
+                                .map(|b| b.as_ref() as &[_])
+                                .collect::<Vec<_>>()
+                                .concat()
+                                .into();
+                            let row_groups_inner_validity = None;
+                            as_array_ref(ListArray::try_new(
+                                std::sync::Arc::new(Field::new("item", DataType::UInt64, false)),
+                                offsets,
+                                as_array_ref(PrimitiveArray::<UInt64Type>::new(
+                                    row_groups_inner_data,
+                                    row_groups_inner_validity,
+                                )),
+                                row_groups_validity,
+                            )?)
+                        }
                     },
                 ],
                 validity,
@@ -301,18 +363,74 @@ impl ::re_types_core::FromArrow for TableSchema {
                             .with_context("rerun.encodings.TableSchema#sticky_columns")?
                             .into_iter()
                     };
+                    let row_groups = {
+                        if !arrays_by_name.contains_key("row_groups") {
+                            return Err(DeserializationError::missing_struct_field(
+                                Self::arrow_data_type(),
+                                "row_groups",
+                            ))
+                            .with_context("rerun.encodings.TableSchema");
+                        }
+                        let arrow_data = &**arrays_by_name["row_groups"];
+                        {
+                            let arrow_data = arrow_data
+                                .try_cast::<arrow::array::ListArray>(|| {
+                                    DataType::List(std::sync::Arc::new(Field::new(
+                                        "item",
+                                        DataType::UInt64,
+                                        false,
+                                    )))
+                                })
+                                .with_context("rerun.encodings.TableSchema#row_groups")?;
+                            if arrow_data.is_empty() {
+                                Vec::new()
+                            } else {
+                                let arrow_data_inner = {
+                                    let arrow_data_inner = &**arrow_data.values();
+                                    arrow_data_inner
+                                        .try_cast::<UInt64Array>(|| DataType::UInt64)
+                                        .with_context("rerun.encodings.TableSchema#row_groups")?
+                                        .values()
+                                };
+                                let offsets = arrow_data.offsets();
+                                ZipValidity::new_with_validity(
+                                    offsets.array_windows(),
+                                    arrow_data.nulls(),
+                                )
+                                .map(|elem| {
+                                    elem.map(|&[start, end]| {
+                                        let start = start as usize;
+                                        let end = end as usize;
+                                        if arrow_data_inner.len() < end {
+                                            return Err(DeserializationError::offset_slice_oob(
+                                                (start, end),
+                                                arrow_data_inner.len(),
+                                            ));
+                                        }
+                                        let data =
+                                            arrow_data_inner.clone().slice(start, end - start);
+                                        Ok(data)
+                                    })
+                                    .transpose()
+                                })
+                                .collect::<DeserializationResult<Vec<Option<_>>>>()?
+                            }
+                            .into_iter()
+                        }
+                    };
                     ZipValidity::new_with_validity(
-                        ::itertools::izip!(groups, sort_scope, sticky_columns),
+                        ::itertools::izip!(groups, sort_scope, sticky_columns, row_groups),
                         arrow_data.nulls(),
                     )
                     .map(|opt| {
-                        opt.map(|(groups, sort_scope, sticky_columns)| {
+                        opt.map(|(groups, sort_scope, sticky_columns, row_groups)| {
                             Ok(Self {
                                 groups: groups
                                     .ok_or_else(DeserializationError::missing_data)
                                     .with_context("rerun.encodings.TableSchema#groups")?,
                                 sort_scope,
                                 sticky_columns,
+                                row_groups,
                             })
                         })
                         .transpose()

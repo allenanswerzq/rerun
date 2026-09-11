@@ -11,4 +11,10 @@ pub struct TextLogRows {
     /// Defaults to showing all logged levels.
     #[rerun(optional)]
     pub filter_by_log_level: Option<Vec<rerun::components::TextLogLevel>>,
+
+    /// Whether to show the newest log entries first.
+    ///
+    /// Defaults to oldest first.
+    #[rerun(optional)]
+    pub newest_first: Option<rerun::blueprint::components::Enabled>,
 }

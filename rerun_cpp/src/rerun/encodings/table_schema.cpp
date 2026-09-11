@@ -29,6 +29,11 @@ namespace rerun {
                 true
             ),
             arrow::field("sticky_columns", arrow::uint32(), true),
+            arrow::field(
+                "row_groups",
+                arrow::list(arrow::field("item", arrow::uint64(), false)),
+                true
+            ),
         });
         return datatype;
     }
@@ -111,6 +116,26 @@ namespace rerun {
                 const auto& element = elements[elem_idx];
                 if (element.sticky_columns.has_value()) {
                     ARROW_RETURN_NOT_OK(field_builder->Append(element.sticky_columns.value()));
+                } else {
+                    ARROW_RETURN_NOT_OK(field_builder->AppendNull());
+                }
+            }
+        }
+        {
+            auto field_builder = static_cast<arrow::ListBuilder*>(builder->field_builder(3));
+            auto value_builder = static_cast<arrow::UInt64Builder*>(field_builder->value_builder());
+            ARROW_RETURN_NOT_OK(field_builder->Reserve(static_cast<int64_t>(num_elements)));
+            ARROW_RETURN_NOT_OK(value_builder->Reserve(static_cast<int64_t>(num_elements) * 1));
+
+            for (size_t elem_idx = 0; elem_idx < num_elements; elem_idx += 1) {
+                const auto& element = elements[elem_idx];
+                if (element.row_groups.has_value()) {
+                    ARROW_RETURN_NOT_OK(field_builder->Append());
+                    ARROW_RETURN_NOT_OK(value_builder->AppendValues(
+                        element.row_groups.value().data(),
+                        static_cast<int64_t>(element.row_groups.value().size()),
+                        nullptr
+                    ));
                 } else {
                     ARROW_RETURN_NOT_OK(field_builder->AppendNull());
                 }

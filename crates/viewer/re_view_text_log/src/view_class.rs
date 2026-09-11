@@ -61,6 +61,22 @@ pub struct TextView;
 
 type ViewType = re_sdk_types::blueprint::views::TextLogView;
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum EntryOrder {
+    OldestFirst,
+    NewestFirst,
+}
+
+impl EntryOrder {
+    fn apply<T>(self, entries: &mut [T], scroll_to_row: Option<usize>) -> Option<usize> {
+        if self == Self::OldestFirst {
+            return scroll_to_row;
+        }
+        entries.reverse();
+        scroll_to_row.map(|row| entries.len().saturating_sub(row.saturating_add(1)))
+    }
+}
+
 impl ViewClass for TextView {
     fn identifier() -> ViewClassIdentifier {
         ViewType::identifier()
@@ -227,6 +243,10 @@ Filter message types and toggle column visibility in a selection panel.",
             &view_ctx,
             TextLogRows::descriptor_filter_by_log_level().component,
         )?;
+        let newest_first = rows_property.component_or_fallback::<Enabled>(
+            &view_ctx,
+            TextLogRows::descriptor_newest_first().component,
+        )?;
 
         for te in text.iter() {
             if let Some(lvl) = &te.level {
@@ -236,7 +256,7 @@ Filter message types and toggle column visibility in a selection panel.",
 
         // TODO(andreas): Should filter text entries in the part-system instead.
         // this likely requires a way to pass state into a context.
-        let entries = text
+        let mut entries = text
             .iter()
             .filter(|te| {
                 te.level
@@ -260,11 +280,17 @@ Filter message types and toggle column visibility in a selection panel.",
                 .map(|i| entries[i].time.as_i64());
             let anchor_moved = anchor_time != state.last_anchor_time;
             let time_cursor_moved = state.latest_time != time;
-            let scroll_to_row = (time_cursor_moved || anchor_moved).then(|| {
+            let mut scroll_to_row = (time_cursor_moved || anchor_moved).then(|| {
                 re_tracing::profile_scope!("search scroll time");
                 entries.partition_point(|te| te.time.as_i64() < time)
             });
             state.last_anchor_time = anchor_time;
+            let entry_order = if **newest_first {
+                EntryOrder::NewestFirst
+            } else {
+                EntryOrder::OldestFirst
+            };
+            scroll_to_row = entry_order.apply(&mut entries, scroll_to_row);
 
             ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
                 egui::ScrollArea::horizontal().show(ui, |ui| {
@@ -276,6 +302,7 @@ Filter message types and toggle column visibility in a selection panel.",
                         &timeline_columns,
                         &columns,
                         **monospace_body,
+                        entry_order,
                         &entries,
                         scroll_to_row,
                     );
@@ -300,6 +327,7 @@ fn table_ui(
     timeline_columns: &[TimelineColumn],
     columns: &[TextLogColumn],
     monospace_body: bool,
+    entry_order: EntryOrder,
     entries: &[&Entry],
     scroll_to_row: Option<usize>,
 ) {
@@ -421,7 +449,10 @@ fn table_ui(
                         if let Some(global_time) = global_time
                             && timeline == global_timeline
                         {
-                            if global_time < row_time {
+                            if (entry_order == EntryOrder::OldestFirst && global_time < row_time)
+                                || (entry_order == EntryOrder::NewestFirst
+                                    && global_time > row_time)
+                            {
                                 // We've past the global time - it is thus above this row.
                                 if current_time_y.is_none() {
                                     current_time_y = Some(ui.max_rect().top());

@@ -113,6 +113,7 @@ fn schema_preserves_display_settings() {
             let expected = DataTable::new(TableSchema {
                 sort_scope: Some(sort_scope),
                 sticky_columns: Some(sticky_columns),
+                row_groups: Some(vec![1, 10, 20, 40].into()),
                 ..schema()
             });
             let serialized = expected.to_arrow().unwrap();

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "../../blueprint/components/enabled.hpp"
 #include "../../collection.hpp"
 #include "../../component_batch.hpp"
 #include "../../component_column.hpp"
@@ -25,6 +26,11 @@ namespace rerun::blueprint::archetypes {
         /// Defaults to showing all logged levels.
         std::optional<ComponentBatch> filter_by_log_level;
 
+        /// Whether to show the newest log entries first.
+        ///
+        /// Defaults to oldest first.
+        std::optional<ComponentBatch> newest_first;
+
       public:
         /// The name of the archetype as used in `ComponentDescriptor`s.
         static constexpr const char ArchetypeName[] = "rerun.blueprint.archetypes.TextLogRows";
@@ -33,6 +39,11 @@ namespace rerun::blueprint::archetypes {
         static constexpr auto Descriptor_filter_by_log_level = ComponentDescriptor(
             ArchetypeName, "TextLogRows:filter_by_log_level",
             Loggable<rerun::components::TextLogLevel>::ComponentType
+        );
+        /// `ComponentDescriptor` for the `newest_first` field.
+        static constexpr auto Descriptor_newest_first = ComponentDescriptor(
+            ArchetypeName, "TextLogRows:newest_first",
+            Loggable<rerun::blueprint::components::Enabled>::ComponentType
         );
 
       public:
@@ -59,6 +70,16 @@ namespace rerun::blueprint::archetypes {
             filter_by_log_level =
                 ComponentBatch::from_loggable(_filter_by_log_level, Descriptor_filter_by_log_level)
                     .value_or_throw();
+            return std::move(*this);
+        }
+
+        /// Whether to show the newest log entries first.
+        ///
+        /// Defaults to oldest first.
+        TextLogRows with_newest_first(const rerun::blueprint::components::Enabled& _newest_first
+        ) && {
+            newest_first = ComponentBatch::from_loggable(_newest_first, Descriptor_newest_first)
+                               .value_or_throw();
             return std::move(*this);
         }
 

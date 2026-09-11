@@ -31,6 +31,9 @@ pub(crate) struct TableData {
     /// Number of values in each flat column.
     column_lengths: Vec<usize>,
 
+    /// Zero-based row ranges whose first row contains the group summary.
+    row_group_ranges: Vec<(usize, usize)>,
+
     /// Cell data kept in its original row-major or column-major layout.
     values: TableValues,
 }
@@ -103,6 +106,11 @@ impl TableData {
             }
             group_ranges.push((start, columns.len()));
         }
+        if let Some(row_groups) = &schema.row_groups
+            && (row_groups.contains(&0) || row_groups.windows(2).any(|rows| rows[0] >= rows[1]))
+        {
+            return Err("Row group starts must be positive and strictly increasing.".into());
+        }
 
         let rows = rows.filter(|rows| !rows.is_empty());
         let cols = cols.filter(|cols| !cols.is_empty());
@@ -129,6 +137,27 @@ impl TableData {
             }
             (None, None) => (TableValues::Rows(Vec::new()), vec![0; columns.len()]),
         };
+        let num_rows = column_lengths.iter().copied().max().unwrap_or(0);
+        let row_group_ranges = schema
+            .row_groups
+            .as_ref()
+            .map(|starts| {
+                starts
+                    .iter()
+                    .copied()
+                    .take_while(|&start| start <= num_rows as u64)
+                    .enumerate()
+                    .map(|(index, start)| {
+                        let end = starts
+                            .get(index + 1)
+                            .copied()
+                            .unwrap_or(num_rows as u64 + 1)
+                            .min(num_rows as u64 + 1);
+                        (start as usize - 1, end as usize - 1)
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
 
         let checkbox_columns = columns
             .iter()
@@ -146,6 +175,7 @@ impl TableData {
             group_ranges,
             checkbox_columns,
             column_lengths,
+            row_group_ranges,
             values,
         };
         for column in 0..table.columns.len() {
@@ -205,11 +235,39 @@ impl TableData {
     }
 
     pub fn sort_scope(&self) -> TableSortScope {
-        self.schema.sort_scope.unwrap_or_default()
+        if self.has_row_groups() {
+            TableSortScope::Table
+        } else {
+            self.schema.sort_scope.unwrap_or_default()
+        }
     }
 
     pub fn num_sticky_columns(&self) -> usize {
         (self.schema.sticky_columns.unwrap_or(1) as usize).min(self.num_columns())
+    }
+
+    pub fn has_row_groups(&self) -> bool {
+        !self.row_group_ranges.is_empty()
+    }
+
+    pub fn is_row_group_summary(&self, display_row: u64) -> bool {
+        self.row_group_ranges
+            .binary_search_by_key(&(display_row as usize), |range| range.0)
+            .is_ok()
+    }
+
+    pub fn row_group_has_details(&self, display_row: usize) -> bool {
+        self.row_group_ranges
+            .binary_search_by_key(&display_row, |range| range.0)
+            .ok()
+            .is_some_and(|index| {
+                let (start, end) = self.row_group_ranges[index];
+                end - start > 1
+            })
+    }
+
+    pub fn row_group_ranges(&self) -> &[(usize, usize)] {
+        &self.row_group_ranges
     }
 
     pub fn has_subgroups(&self) -> bool {

@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use rayon::prelude::*;
 use re_sdk_types::encodings::{TableColumnOption, TableSortScope};
@@ -22,13 +22,15 @@ pub(crate) struct SortKey {
 struct SortOrder {
     keys: Vec<SortKey>,
     rows: Vec<usize>,
+    groups: Vec<usize>,
     dirty: bool,
 }
 
 impl SortOrder {
     fn release_rows(&mut self) {
-        if self.rows.capacity() > 0 {
+        if self.rows.capacity() > 0 || self.groups.capacity() > 0 {
             self.rows = Vec::new();
+            self.groups = Vec::new();
             self.dirty = true;
         }
     }
@@ -38,6 +40,10 @@ impl SortOrder {
 pub(crate) struct TableUiState {
     selected_options: BTreeMap<usize, String>,
     checked: BTreeMap<(usize, usize), bool>,
+    expanded_row_groups: BTreeSet<u64>,
+    visible_rows: Vec<usize>,
+    max_visible_row_number: usize,
+    visible_rows_dirty: bool,
     table_order: SortOrder,
     group_orders: Vec<SortOrder>,
 }
@@ -118,10 +124,12 @@ impl TableUiState {
             self.table_order = SortOrder::default();
             self.group_orders.clear();
             self.selected_options.clear();
+            self.expanded_row_groups.clear();
         }
         self.checked.clear();
         self.group_orders
             .resize_with(table.schema.groups.len(), SortOrder::default);
+        self.visible_rows_dirty = true;
         self.invalidate_sort();
     }
 
@@ -183,20 +191,107 @@ impl TableUiState {
     }
 
     pub fn prepare(&mut self, table: &TableData) {
-        match table.sort_scope() {
+        let sort_changed = match table.sort_scope() {
             TableSortScope::Table => {
                 for order in &mut self.group_orders {
                     order.release_rows();
                 }
-                sort_order(table, &self.checked, &mut self.table_order);
+                sort_order(
+                    table,
+                    &self.checked,
+                    &self.expanded_row_groups,
+                    &mut self.table_order,
+                )
             }
             TableSortScope::Subgroup => {
                 self.table_order.release_rows();
+                let mut changed = false;
                 for order in &mut self.group_orders {
-                    sort_order(table, &self.checked, order);
+                    changed |= sort_order(table, &self.checked, &self.expanded_row_groups, order);
                 }
+                changed
+            }
+        };
+        if sort_changed || self.visible_rows_dirty {
+            self.rebuild_visible_rows(table);
+        }
+    }
+
+    pub fn num_visible_rows(&self, table: &TableData) -> usize {
+        if table.has_row_groups() {
+            self.visible_rows.len()
+        } else {
+            table.num_rows()
+        }
+    }
+
+    pub fn max_visible_row_number(&self, table: &TableData) -> usize {
+        if table.has_row_groups() {
+            self.max_visible_row_number
+        } else {
+            table.num_rows()
+        }
+    }
+
+    pub fn display_row(&self, table: &TableData, visible_row: usize) -> usize {
+        if table.has_row_groups() {
+            self.visible_rows
+                .get(visible_row)
+                .copied()
+                .unwrap_or_else(|| table.num_rows().saturating_sub(1))
+        } else {
+            visible_row
+        }
+    }
+
+    pub fn row_group_is_expanded(&self, display_row: usize) -> bool {
+        self.expanded_row_groups.contains(&(display_row as u64 + 1))
+    }
+
+    pub fn toggle_row_group(&mut self, table: &TableData, display_row: usize) -> bool {
+        if !table.row_group_has_details(display_row) {
+            return false;
+        }
+        let start = display_row as u64 + 1;
+        let expanded = self.expanded_row_groups.insert(start);
+        if !expanded {
+            self.expanded_row_groups.remove(&start);
+        } else if !self.table_order.keys.is_empty() {
+            self.table_order.dirty = true;
+        }
+        self.visible_rows_dirty = true;
+        true
+    }
+
+    fn rebuild_visible_rows(&mut self, table: &TableData) {
+        self.visible_rows.clear();
+        self.max_visible_row_number = 0;
+        self.visible_rows_dirty = false;
+        let ranges = table.row_group_ranges();
+        let Some(&(prefix_end, _)) = ranges.first() else {
+            return;
+        };
+        self.visible_rows.extend(0..prefix_end);
+        for group_slot in 0..ranges.len() {
+            let group_index = self
+                .table_order
+                .groups
+                .get(group_slot)
+                .copied()
+                .unwrap_or(group_slot);
+            let (start, end) = ranges[group_index];
+            if self.row_group_is_expanded(start) {
+                self.visible_rows.extend(start..end);
+            } else {
+                self.visible_rows.push(start);
             }
         }
+        self.max_visible_row_number = self
+            .visible_rows
+            .iter()
+            .copied()
+            .max()
+            .map_or(0, |row| row + 1);
     }
 
     pub fn source_row(&self, table: &TableData, display_row: usize, column: usize) -> usize {
@@ -242,16 +337,21 @@ fn cell_value<'a>(
     }
 }
 
-fn sort_order(table: &TableData, checked: &BTreeMap<(usize, usize), bool>, order: &mut SortOrder) {
+fn sort_order(
+    table: &TableData,
+    checked: &BTreeMap<(usize, usize), bool>,
+    expanded_row_groups: &BTreeSet<u64>,
+    order: &mut SortOrder,
+) -> bool {
     if !order.dirty {
-        return;
+        return false;
     }
     order.dirty = false;
     order.rows.clear();
+    order.groups.clear();
     if order.keys.is_empty() {
-        return;
+        return true;
     }
-    order.rows.extend(0..table.num_rows());
     let compare_rows = |left_row: &usize, right_row: &usize| {
         for key in &order.keys {
             let left = cell_value(table, checked, *left_row, key.column);
@@ -274,9 +374,38 @@ fn sort_order(table: &TableData, checked: &BTreeMap<(usize, usize), bool>, order
         }
         left_row.cmp(right_row)
     };
-    if order.rows.len() < 4_096 {
-        order.rows.sort_unstable_by(compare_rows);
+    let ranges = table.row_group_ranges();
+    if let Some(first) = ranges.first() {
+        let has_expanded_details = ranges.iter().any(|&(start, end)| {
+            end - start > 1 && expanded_row_groups.contains(&(start as u64 + 1))
+        });
+        let row_count = if has_expanded_details {
+            table.num_rows()
+        } else {
+            first.0
+        };
+        order.rows.extend(0..row_count);
+        sort_rows(&mut order.rows[..first.0], &compare_rows);
+        for &(start, end) in ranges {
+            if end - start > 1 && expanded_row_groups.contains(&(start as u64 + 1)) {
+                sort_rows(&mut order.rows[start + 1..end], &compare_rows);
+            }
+        }
+        order.groups.extend(0..ranges.len());
+        sort_rows(&mut order.groups, &|left, right| {
+            compare_rows(&ranges[*left].0, &ranges[*right].0)
+        });
     } else {
-        order.rows.par_sort_unstable_by(compare_rows);
+        order.rows.extend(0..table.num_rows());
+        sort_rows(&mut order.rows, &compare_rows);
+    }
+    true
+}
+
+fn sort_rows(rows: &mut [usize], compare: &(impl Fn(&usize, &usize) -> Ordering + Sync)) {
+    if rows.len() < 4_096 {
+        rows.sort_unstable_by(compare);
+    } else {
+        rows.par_sort_unstable_by(compare);
     }
 }

@@ -33,6 +33,11 @@ pub struct TextLogRows {
     ///
     /// Defaults to showing all logged levels.
     pub filter_by_log_level: Option<SerializedComponentBatch>,
+
+    /// Whether to show the newest log entries first.
+    ///
+    /// Defaults to oldest first.
+    pub newest_first: Option<SerializedComponentBatch>,
 }
 
 impl TextLogRows {
@@ -49,6 +54,20 @@ impl TextLogRows {
             });
         (*DESCRIPTOR).clone()
     }
+
+    /// Returns the [`ComponentDescriptor`] for [`Self::newest_first`].
+    ///
+    /// The corresponding component is [`crate::blueprint::components::Enabled`].
+    #[inline]
+    pub fn descriptor_newest_first() -> ComponentDescriptor {
+        static DESCRIPTOR: std::sync::LazyLock<ComponentDescriptor> =
+            std::sync::LazyLock::new(|| ComponentDescriptor {
+                archetype: Some("rerun.blueprint.archetypes.TextLogRows".into()),
+                component: "TextLogRows:newest_first".into(),
+                component_type: Some("rerun.blueprint.components.Enabled".into()),
+            });
+        (*DESCRIPTOR).clone()
+    }
 }
 
 static REQUIRED_COMPONENTS: std::sync::LazyLock<[ComponentDescriptor; 0usize]> =
@@ -57,15 +76,25 @@ static REQUIRED_COMPONENTS: std::sync::LazyLock<[ComponentDescriptor; 0usize]> =
 static RECOMMENDED_COMPONENTS: std::sync::LazyLock<[ComponentDescriptor; 0usize]> =
     std::sync::LazyLock::new(|| []);
 
-static OPTIONAL_COMPONENTS: std::sync::LazyLock<[ComponentDescriptor; 1usize]> =
-    std::sync::LazyLock::new(|| [TextLogRows::descriptor_filter_by_log_level()]);
+static OPTIONAL_COMPONENTS: std::sync::LazyLock<[ComponentDescriptor; 2usize]> =
+    std::sync::LazyLock::new(|| {
+        [
+            TextLogRows::descriptor_filter_by_log_level(),
+            TextLogRows::descriptor_newest_first(),
+        ]
+    });
 
-static ALL_COMPONENTS: std::sync::LazyLock<[ComponentDescriptor; 1usize]> =
-    std::sync::LazyLock::new(|| [TextLogRows::descriptor_filter_by_log_level()]);
+static ALL_COMPONENTS: std::sync::LazyLock<[ComponentDescriptor; 2usize]> =
+    std::sync::LazyLock::new(|| {
+        [
+            TextLogRows::descriptor_filter_by_log_level(),
+            TextLogRows::descriptor_newest_first(),
+        ]
+    });
 
 impl TextLogRows {
-    /// The total number of components in the archetype: 0 required, 0 recommended, 1 optional
-    pub const NUM_COMPONENTS: usize = 1usize;
+    /// The total number of components in the archetype: 0 required, 0 recommended, 2 optional
+    pub const NUM_COMPONENTS: usize = 2usize;
 }
 
 impl ::re_types_core::Archetype for TextLogRows {
@@ -116,8 +145,14 @@ impl ::re_types_core::Archetype for TextLogRows {
             .map(|array| {
                 SerializedComponentBatch::new(array.clone(), Self::descriptor_filter_by_log_level())
             });
+        let newest_first = arrays_by_descr
+            .get(&Self::descriptor_newest_first())
+            .map(|array| {
+                SerializedComponentBatch::new(array.clone(), Self::descriptor_newest_first())
+            });
         Ok(Self {
             filter_by_log_level,
+            newest_first,
         })
     }
 }
@@ -126,7 +161,8 @@ impl ::re_types_core::AsComponents for TextLogRows {
     #[inline]
     fn as_serialized_batches(&self) -> Vec<SerializedComponentBatch> {
         use ::re_types_core::Archetype as _;
-        std::iter::once(self.filter_by_log_level.clone())
+        [self.filter_by_log_level.clone(), self.newest_first.clone()]
+            .into_iter()
             .flatten()
             .collect()
     }
@@ -140,6 +176,7 @@ impl TextLogRows {
     pub fn new() -> Self {
         Self {
             filter_by_log_level: None,
+            newest_first: None,
         }
     }
 
@@ -158,6 +195,10 @@ impl TextLogRows {
                 crate::components::TextLogLevel::arrow_empty(),
                 Self::descriptor_filter_by_log_level(),
             )),
+            newest_first: Some(SerializedComponentBatch::new(
+                crate::blueprint::components::Enabled::arrow_empty(),
+                Self::descriptor_newest_first(),
+            )),
         }
     }
 
@@ -171,6 +212,18 @@ impl TextLogRows {
     ) -> Self {
         self.filter_by_log_level =
             try_serialize_field(Self::descriptor_filter_by_log_level(), filter_by_log_level);
+        self
+    }
+
+    /// Whether to show the newest log entries first.
+    ///
+    /// Defaults to oldest first.
+    #[inline]
+    pub fn with_newest_first(
+        mut self,
+        newest_first: impl Into<crate::blueprint::components::Enabled>,
+    ) -> Self {
+        self.newest_first = try_serialize_field(Self::descriptor_newest_first(), [newest_first]);
         self
     }
 }

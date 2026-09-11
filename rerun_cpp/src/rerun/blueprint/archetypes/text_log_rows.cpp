@@ -11,14 +11,20 @@ namespace rerun::blueprint::archetypes {
         archetype.filter_by_log_level =
             ComponentBatch::empty<rerun::components::TextLogLevel>(Descriptor_filter_by_log_level)
                 .value_or_throw();
+        archetype.newest_first =
+            ComponentBatch::empty<rerun::blueprint::components::Enabled>(Descriptor_newest_first)
+                .value_or_throw();
         return archetype;
     }
 
     Collection<ComponentColumn> TextLogRows::columns(const Collection<uint32_t>& lengths_) {
         std::vector<ComponentColumn> columns;
-        columns.reserve(1);
+        columns.reserve(2);
         if (filter_by_log_level.has_value()) {
             columns.push_back(filter_by_log_level.value().partitioned(lengths_).value_or_throw());
+        }
+        if (newest_first.has_value()) {
+            columns.push_back(newest_first.value().partitioned(lengths_).value_or_throw());
         }
         return columns;
     }
@@ -26,6 +32,9 @@ namespace rerun::blueprint::archetypes {
     Collection<ComponentColumn> TextLogRows::columns() {
         if (filter_by_log_level.has_value()) {
             return columns(std::vector<uint32_t>(filter_by_log_level.value().length(), 1));
+        }
+        if (newest_first.has_value()) {
+            return columns(std::vector<uint32_t>(newest_first.value().length(), 1));
         }
         return Collection<ComponentColumn>();
     }
@@ -38,10 +47,13 @@ namespace rerun {
     ) {
         using namespace blueprint::archetypes;
         std::vector<ComponentBatch> cells;
-        cells.reserve(1);
+        cells.reserve(2);
 
         if (archetype.filter_by_log_level.has_value()) {
             cells.push_back(archetype.filter_by_log_level.value());
+        }
+        if (archetype.newest_first.has_value()) {
+            cells.push_back(archetype.newest_first.value());
         }
 
         return rerun::take_ownership(std::move(cells));

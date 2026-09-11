@@ -16,10 +16,14 @@ from .._baseclasses import (
 )
 from .._converters import (
     int_or_none,
+    to_np_uint64,
 )
 from .table_schema_ext import TableSchemaExt
 
 if TYPE_CHECKING:
+    import numpy as np
+    import numpy.typing as npt
+
     from .. import encodings
 
 __all__ = ["TableSchema", "TableSchemaArrayLike", "TableSchemaBatch", "TableSchemaLike"]
@@ -39,6 +43,7 @@ class TableSchema(TableSchemaExt):
         *,
         sort_scope: encodings.TableSortScopeLike | None = None,
         sticky_columns: int | None = None,
+        row_groups: npt.ArrayLike | None = None,
     ) -> None:
         """
         Create a new instance of the TableSchema encoding.
@@ -51,11 +56,17 @@ class TableSchema(TableSchemaExt):
             Scope of header-click sorting; defaults to the whole table.
         sticky_columns:
             Number of leading columns kept visible while scrolling; defaults to one.
+        row_groups:
+            One-based summary rows that start visual row groups.
+
+            For example, `[1, 10, 20]` creates groups `[1, 10)`, `[10, 20)`, and `[20, …)`.
+            Groups are collapsed by default, leaving each summary row visible with a disclosure control.
+            Sorting orders whole groups by their summary values and therefore uses table-wide scope.
 
         """
 
         # You can define your own __init__ function as a member of TableSchemaExt in table_schema_ext.py
-        self.__attrs_init__(groups=groups, sort_scope=sort_scope, sticky_columns=sticky_columns)
+        self.__attrs_init__(groups=groups, sort_scope=sort_scope, sticky_columns=sticky_columns, row_groups=row_groups)
 
     groups: list[encodings.TableGroup] = field()
     # Groups in display and data order.
@@ -72,6 +83,15 @@ class TableSchema(TableSchemaExt):
 
     sticky_columns: int | None = field(default=None, converter=int_or_none)
     # Number of leading columns kept visible while scrolling; defaults to one.
+    #
+    # (Docstring intentionally commented out to hide this field from the docs)
+
+    row_groups: npt.NDArray[np.uint64] | None = field(default=None, converter=to_np_uint64)
+    # One-based summary rows that start visual row groups.
+    #
+    # For example, `[1, 10, 20]` creates groups `[1, 10)`, `[10, 20)`, and `[20, …)`.
+    # Groups are collapsed by default, leaving each summary row visible with a disclosure control.
+    # Sorting orders whole groups by their summary values and therefore uses table-wide scope.
     #
     # (Docstring intentionally commented out to hide this field from the docs)
 
@@ -138,6 +158,12 @@ class TableSchemaBatch(BaseBatch[TableSchemaArrayLike]):
         ),
         pa.field("sort_scope", pa.uint8(), nullable=True, metadata={}),
         pa.field("sticky_columns", pa.uint32(), nullable=True, metadata={}),
+        pa.field(
+            "row_groups",
+            pa.list_(pa.field("item", pa.uint64(), nullable=False, metadata={})),
+            nullable=True,
+            metadata={},
+        ),
     ])
 
     @staticmethod

@@ -14,4 +14,11 @@ pub struct TableSchema {
 
     /// Number of leading columns kept visible while scrolling; defaults to one.
     pub sticky_columns: Option<u32>,
+
+    /// One-based summary rows that start visual row groups.
+    ///
+    /// For example, `[1, 10, 20]` creates groups `[1, 10)`, `[10, 20)`, and `[20, …)`.
+    /// Groups are collapsed by default, leaving each summary row visible with a disclosure control.
+    /// Sorting orders whole groups by their summary values and therefore uses table-wide scope.
+    pub row_groups: Option<Vec<u64>>,
 }

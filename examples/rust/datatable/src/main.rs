@@ -4,7 +4,10 @@ use std::{cell::RefCell, rc::Rc};
 
 use rand::{Rng as _, SeedableRng as _, rngs::SmallRng};
 use rerun::blueprint::{
-    Blueprint, BlueprintPanel, SelectionPanel, TimePanel, components::PanelState,
+    Blueprint, BlueprintPanel, DataTableView, Horizontal, SelectionPanel, TextLogColumns,
+    TextLogView, TimePanel,
+    components::{PanelState, TimelineColumn},
+    encodings::{TextLogColumn, TextLogColumnKind},
 };
 use rerun::components::TableColumn;
 use rerun::encodings::{
@@ -52,10 +55,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn blueprint() -> Blueprint {
-    Blueprint::auto()
-        .with_blueprint_panel(BlueprintPanel::from_state(PanelState::Collapsed))
-        .with_selection_panel(SelectionPanel::from_state(PanelState::Collapsed))
-        .with_time_panel(TimePanel::new().with_state(PanelState::Collapsed))
+    Blueprint::new(
+        Horizontal::new([
+            DataTableView::new("Instruments")
+                .with_origin(TABLE_ENTITY)
+                .into(),
+            TextLogView::new("Events")
+                .with_origin("events")
+                .with_newest_first(true)
+                .with_columns(
+                    TextLogColumns::new()
+                        .with_timeline_columns(std::iter::empty::<TimelineColumn>())
+                        .with_text_log_columns([TextLogColumn {
+                            visible: true.into(),
+                            kind: TextLogColumnKind::Body,
+                        }]),
+                )
+                .into(),
+        ])
+        .with_column_shares([6.0, 4.0]),
+    )
+    .with_blueprint_panel(BlueprintPanel::from_state(PanelState::Collapsed))
+    .with_selection_panel(SelectionPanel::from_state(PanelState::Collapsed))
+    .with_time_panel(TimePanel::new().with_state(PanelState::Collapsed))
 }
 
 fn create_app(
@@ -230,6 +252,7 @@ fn fake_table() -> DemoTable {
             group.columns.push(TableColumnSchema {
                 id: format!("signal_{number}").into(),
                 label: format!("Signal {number:02}").into(),
+                heatmap: (metric == start).then_some(true),
                 column_dropdown: (metric == start).then(|| {
                     HORIZONS
                         .iter()
@@ -251,6 +274,7 @@ fn fake_table() -> DemoTable {
             groups,
             sort_scope: Some(TableSortScope::Table),
             sticky_columns: Some(2),
+            row_groups: Some(vec![1, 10, 20, 40].into()),
         },
         cols,
         selected,

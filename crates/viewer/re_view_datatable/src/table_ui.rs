@@ -15,6 +15,9 @@ const HEADER_CONTROL_WIDTH: f32 = 14.0;
 const HEADER_SEPARATOR_WIDTH: f32 = 2.0;
 const MIN_HEADER_LABEL_WIDTH: f32 = 16.0;
 const SORT_MARKER_WIDTH: f32 = 14.0;
+const ROW_GROUP_TOGGLE_WIDTH: f32 = 12.0;
+const ROW_GUTTER_PADDING: f32 = 2.0;
+const MIN_ROW_GUTTER_WIDTH: f32 = 20.0;
 const WIDTH_SAMPLES: usize = 129;
 const MAX_HEATMAP_MIX: f32 = 0.4;
 
@@ -32,6 +35,9 @@ enum Action {
         column: usize,
         checked: bool,
     },
+    ToggleRowGroup {
+        display_row: usize,
+    },
 }
 
 pub(crate) fn table_ui(
@@ -48,7 +54,8 @@ pub(crate) fn table_ui(
     }
     state.prepare(data);
     let headers = header_rows(data);
-    let num_rows = data.num_rows();
+    let num_rows = state.num_visible_rows(data);
+    let max_row_number = state.max_visible_row_number(data);
     let mut delegate = Delegate {
         data,
         magnitudes,
@@ -68,7 +75,7 @@ pub(crate) fn table_ui(
             ui.visuals().panel_fill,
         );
         let table = egui_table::Table::new().id_salt("table");
-        let columns = column_definitions(ui, data, table.get_id(ui), num_rows);
+        let columns = column_definitions(ui, data, table.get_id(ui), max_row_number);
         let table_rect = ui.available_rect_before_wrap();
         let row_gutter_right = table_rect.left() + columns[0].current;
         let response = table
@@ -132,6 +139,10 @@ impl Action {
                     checked,
                 })
             }
+            Self::ToggleRowGroup { display_row } => {
+                state.toggle_row_group(data, display_row);
+                None
+            }
         }
     }
 }
@@ -162,13 +173,19 @@ fn column_definitions(
     ui: &Ui,
     data: &TableData,
     table_id: Id,
-    num_rows: usize,
+    max_row_number: usize,
 ) -> Vec<egui_table::Column> {
     let mut table_state = egui_table::TableState::load(ui.ctx(), table_id).unwrap_or_default();
-    let digits = num_rows.max(1).ilog10() as usize + 1;
-    let row_width = (text_width(ui, "8".repeat(digits)) + 2.0 * CELL_PADDING)
-        .ceil()
-        .max(24.0);
+    let digits = max_row_number.max(1).ilog10() as usize + 1;
+    let row_width = (text_width(ui, "8".repeat(digits))
+        + 2.0 * ROW_GUTTER_PADDING
+        + if data.has_row_groups() {
+            ROW_GROUP_TOGGLE_WIDTH
+        } else {
+            0.0
+        })
+    .ceil()
+    .max(MIN_ROW_GUTTER_WIDTH);
     let row_id = table_id.with("row_numbers");
     table_state.col_widths.insert(row_id, row_width);
     let mut columns = vec![
@@ -384,9 +401,10 @@ impl TableDelegate for Delegate<'_> {
     }
 
     fn row_ui(&mut self, ui: &mut Ui, row: u64) {
+        let display_row = self.state.display_row(self.data, row as usize);
         let fill = if self.row_is_checked(row) {
             Some(selected_row_fill(ui))
-        } else if row % 2 == 1 {
+        } else if self.data.is_row_group_summary(display_row as u64) || row % 2 == 1 {
             Some(ui.visuals().faint_bg_color)
         } else {
             None
@@ -402,20 +420,17 @@ impl TableDelegate for Delegate<'_> {
         if visible.width() < 1.0 / ui.pixels_per_point() || !visible.is_positive() {
             return;
         }
-        let source_row = info
-            .col_nr
-            .checked_sub(1)
-            .map_or(info.row_nr as usize, |column| {
-                self.state
-                    .source_row(self.data, info.row_nr as usize, column)
-            });
+        let display_row = self.state.display_row(self.data, info.row_nr as usize);
+        let source_row = info.col_nr.checked_sub(1).map_or(display_row, |column| {
+            self.state.source_row(self.data, display_row, column)
+        });
         let content_id = Id::new((
             "data_table_cell",
             info.table_id.value(),
             source_row,
             info.col_nr,
         ));
-        self.cell_contents_ui(ui, info, rect, source_row, content_id);
+        self.cell_contents_ui(ui, info, rect, display_row, source_row, content_id);
     }
 
     fn default_row_height(&self) -> f32 {
@@ -428,7 +443,7 @@ impl Delegate<'_> {
         paint_header_frame(ui, info.row_nr + 1 == self.header_rows);
         let Some(column) = info.col_range.start.checked_sub(1) else {
             if info.row_nr + 1 == self.header_rows {
-                row_number_ui(ui, ui.id().with("row_number"), "#");
+                row_number_ui(ui, ui.id().with("row_number"), "#", None);
             }
             return;
         };
@@ -450,6 +465,7 @@ impl Delegate<'_> {
         ui: &mut Ui,
         info: &egui_table::CellInfo,
         rect: Rect,
+        display_row: usize,
         source_row: usize,
         content_id: Id,
     ) {
@@ -459,15 +475,22 @@ impl Delegate<'_> {
             egui::Stroke::new(0.5, ui.tokens().table_header_stroke_color),
         );
         let Some(column) = info.col_nr.checked_sub(1) else {
-            let number = (info.row_nr + 1).to_string();
-            let response = row_number_ui(ui, content_id, &number);
-            response.widget_info(|| {
+            let number = (display_row + 1).to_string();
+            let expanded = self
+                .data
+                .row_group_has_details(display_row)
+                .then(|| self.state.row_group_is_expanded(display_row));
+            let row_number = row_number_ui(ui, content_id, &number, expanded);
+            row_number.response.widget_info(|| {
                 egui::WidgetInfo::labeled(
                     egui::WidgetType::Label,
                     ui.is_enabled(),
                     format!("Row {number}"),
                 )
             });
+            if row_number.toggle_clicked {
+                self.actions.push(Action::ToggleRowGroup { display_row });
+            }
             return;
         };
         let row = source_row;
@@ -502,7 +525,8 @@ impl Delegate<'_> {
         {
             return checked;
         }
-        let checked = self.state.row_is_checked(self.data, row as usize);
+        let display_row = self.state.display_row(self.data, row as usize);
+        let checked = self.state.row_is_checked(self.data, display_row);
         self.checked_row = Some((row, checked));
         checked
     }
@@ -887,16 +911,56 @@ fn normalized_magnitude(number: f64, maximum: f64) -> f32 {
     (number.abs() / maximum).clamp(0.0, 1.0) as f32
 }
 
-fn row_number_ui(ui: &mut Ui, id: Id, text: &str) -> egui::Response {
-    let rect = ui.max_rect().shrink2(Vec2::new(4.0, 0.0));
+struct RowNumberUi {
+    response: egui::Response,
+    toggle_clicked: bool,
+}
+
+fn row_number_ui(ui: &mut Ui, id: Id, text: &str, expanded: Option<bool>) -> RowNumberUi {
+    let rect = ui.max_rect().shrink2(Vec2::new(ROW_GUTTER_PADDING, 0.0));
+    let mut number_rect = rect;
+    let toggle_clicked = if let Some(expanded) = expanded {
+        let number_width = text_width(ui, text);
+        let toggle_rect = Rect::from_min_size(
+            egui::pos2(
+                (rect.right() - number_width - ROW_GROUP_TOGGLE_WIDTH).max(rect.left()),
+                rect.top(),
+            ),
+            Vec2::new(ROW_GROUP_TOGGLE_WIDTH, rect.height()),
+        );
+        number_rect.min.x = toggle_rect.right();
+        let action = if expanded { "Collapse" } else { "Expand" };
+        let response = ui
+            .interact(toggle_rect, id.with("toggle"), Sense::click())
+            .on_hover_cursor(egui::CursorIcon::PointingHand)
+            .on_hover_text(format!("{action} row group {text}"));
+        response.widget_info(|| {
+            egui::WidgetInfo::labeled(
+                egui::WidgetType::Button,
+                ui.is_enabled(),
+                format!("{action} row group {text}"),
+            )
+        });
+        ui.paint_collapsing_triangle(
+            if expanded { 1.0 } else { 0.0 },
+            toggle_rect.center(),
+            ui.style().interact(&response).fg_stroke.color,
+        );
+        response.clicked()
+    } else {
+        false
+    };
     let mut number_ui = ui.new_child(
         UiBuilder::new()
-            .id(id)
-            .max_rect(rect)
+            .id(id.with("number"))
+            .max_rect(number_rect)
             .layout(Layout::right_to_left(Align::Center)),
     );
-    number_ui.shrink_clip_rect(rect);
-    number_ui.add(egui::Label::new(RichText::new(text).weak()).truncate())
+    number_ui.shrink_clip_rect(number_rect);
+    RowNumberUi {
+        response: number_ui.add(egui::Label::new(RichText::new(text).weak()).truncate()),
+        toggle_clicked,
+    }
 }
 
 fn value_ui(ui: &mut Ui, id: Id, value: CellValue<'_>) -> egui::Response {

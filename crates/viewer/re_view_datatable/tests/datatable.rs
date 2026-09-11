@@ -211,6 +211,7 @@ fn schema_controls_sort_scope_and_sticky_columns() {
     let data = column_table().with_schema(TableSchema {
         sort_scope: Some(TableSortScope::Subgroup),
         sticky_columns: Some(2),
+        row_groups: Some(vec![1, 3].into()),
         ..schema()
     });
     let (context, view_id) = setup(&data);
@@ -218,12 +219,42 @@ fn schema_controls_sort_scope_and_sticky_columns() {
         .setup_kittest_for_rendering_ui(egui::vec2(240.0, 300.0))
         .build_ui(|ui| context.run_with_single_view(ui, view_id));
     harness.run();
+    harness.get_by_label("Row 1");
+    harness.get_by_label("Row 3");
+    assert!(harness.query_by_label("Row 2").is_none());
+    assert!(harness.query_by_label("BBB").is_none());
 
     harness.get_by_label("Sort Return").click();
     harness.run();
+    assert!(
+        harness.get_by_label("Row 3").rect().top() < harness.get_by_label("Row 1").rect().top()
+    );
+
+    harness.get_by_label("Expand row group 1").click();
+    harness.run();
+    harness.get_by_label("Collapse row group 1");
+    harness.get_by_label("Row 2");
+    harness.get_by_label("BBB");
+
     assert_eq!(
         harness.get_by_label("Gold").rect().top(),
-        harness.get_by_label("CCC").rect().top()
+        harness.get_by_label("BBB").rect().top()
+    );
+
+    harness.get_by_label("Sort Return").click();
+    harness.run();
+    assert!(
+        harness.get_by_label("Row 1").rect().top() < harness.get_by_label("Row 3").rect().top()
+    );
+    harness.get_by_label("Sort Return").click();
+    harness.run();
+    assert!(
+        harness.get_by_label("Row 1").rect().top() < harness.get_by_label("Row 3").rect().top()
+    );
+    harness.get_by_label("Sort Return").click();
+    harness.run();
+    assert!(
+        harness.get_by_label("Row 3").rect().top() < harness.get_by_label("Row 1").rect().top()
     );
 
     let row_left = harness.get_by_label("Row 1").rect().left();
@@ -240,6 +271,10 @@ fn schema_controls_sort_scope_and_sticky_columns() {
     assert_eq!(harness.get_by_label("Row 1").rect().left(), row_left);
     assert_eq!(harness.get_by_label("AAA").rect().left(), ticker_left);
     assert!(harness.get_by_label("Gold").rect().left() < commodity_left);
+
+    harness.get_by_label("Collapse row group 1").click();
+    harness.run();
+    assert!(harness.query_by_label("BBB").is_none());
 }
 
 #[test]

@@ -8,8 +8,9 @@ mod view;
 pub use api::{Blueprint, BlueprintActivation, BlueprintOpts};
 pub use container::{ContainerLike, Grid, Horizontal, Tabs, Vertical};
 pub use panel::{BlueprintPanel, SelectionPanel, TimePanel};
+pub use re_sdk_types::blueprint::archetypes::TextLogColumns;
 pub use view::{
-    BarChartView, DataframeView, GraphView, MapView, Spatial2DView, Spatial3DView,
+    BarChartView, DataTableView, DataframeView, GraphView, MapView, Spatial2DView, Spatial3DView,
     StateTimelineView, TensorView, TextDocumentView, TextLogView, TimeSeriesView, View,
 };
 

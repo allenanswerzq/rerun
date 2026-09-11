@@ -371,6 +371,12 @@ impl From<crate::blueprint::TextLogView> for ContainerLike {
     }
 }
 
+impl From<crate::blueprint::DataTableView> for ContainerLike {
+    fn from(view: crate::blueprint::DataTableView) -> Self {
+        Self::View(view.0)
+    }
+}
+
 impl From<crate::blueprint::BarChartView> for ContainerLike {
     fn from(view: crate::blueprint::BarChartView) -> Self {
         Self::View(view.0)

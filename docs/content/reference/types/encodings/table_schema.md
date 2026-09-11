@@ -22,6 +22,15 @@ Type: `UInt32`
 
 Number of leading columns kept visible while scrolling; defaults to one.
 
+#### `row_groups`
+Type: List of `UInt64`
+
+One-based summary rows that start visual row groups.
+
+For example, `[1, 10, 20]` creates groups `[1, 10)`, `[10, 20)`, and `[20, …)`.
+Groups are collapsed by default, leaving each summary row visible with a disclosure control.
+Sorting orders whole groups by their summary values and therefore uses table-wide scope.
+
 
 ## Arrow datatype
 ```
@@ -43,6 +52,7 @@ Struct(
         ))
     "sort_scope": UInt8
     "sticky_columns": UInt32
+    "row_groups": List(non-null UInt64)
 )
 ```
 

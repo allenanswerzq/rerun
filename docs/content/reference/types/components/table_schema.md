@@ -33,6 +33,7 @@ Struct(
         ))
     "sort_scope": UInt8
     "sticky_columns": UInt32
+    "row_groups": List(non-null UInt64)
 )
 ```
 

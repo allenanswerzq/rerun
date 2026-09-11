@@ -5452,13 +5452,22 @@ fn generate_archetype_reflection() -> ArchetypeReflectionMap {
                 deprecation_summary: None,
                 scope: Some("blueprint"),
                 view_types: &[],
-                fields: vec![ArchetypeFieldReflection {
-                    name: "filter_by_log_level",
-                    display_name: "Filter by log level",
-                    component_type: "rerun.components.TextLogLevel".into(),
-                    docstring_md: "Log levels to display.\n\nDefaults to showing all logged levels.",
-                    flags: ArchetypeFieldFlags::UI_EDITABLE,
-                }],
+                fields: vec![
+                    ArchetypeFieldReflection {
+                        name: "filter_by_log_level",
+                        display_name: "Filter by log level",
+                        component_type: "rerun.components.TextLogLevel".into(),
+                        docstring_md: "Log levels to display.\n\nDefaults to showing all logged levels.",
+                        flags: ArchetypeFieldFlags::UI_EDITABLE,
+                    },
+                    ArchetypeFieldReflection {
+                        name: "newest_first",
+                        display_name: "Newest first",
+                        component_type: "rerun.blueprint.components.Enabled".into(),
+                        docstring_md: "Whether to show the newest log entries first.\n\nDefaults to oldest first.",
+                        flags: ArchetypeFieldFlags::UI_EDITABLE,
+                    },
+                ],
             },
         ),
         (
