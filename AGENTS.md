@@ -10,6 +10,21 @@ Rerun is a time-aware multimodal data stack and visualizations tool used in robo
 
 We use `pixi` for task management and dependency installation. Check `pixi.toml` for a full list of tasks.
 
+### Fast build system
+
+Prefer the root `justfile` recipes for local Rust edit-build-check cycles.
+The recipes run **Cargo** through Pixi, use the pinned nightly Cranelift backend, enable incremental compilation, and use `rust-lld` on Windows.
+
+- Run `just setup-fast` once to install the pinned nightly compiler and Cranelift backend.
+- Use `just build-fast -p <package_name>` to build a Rust package.
+- Use `just check-fast -p <package_name>` for the quickest compile check.
+- Use `just clippy-fast -p <package_name>` to run Clippy.
+- Use `just lint-fast <files>` to run the repository's quick lint checks.
+- Use `just run-fast -p <package_name>` to build and run a Rust package.
+- Use `just --list` to see package-specific shortcuts such as `datatable-fast` and `viewer-fast`.
+
+Use the regular Pixi tasks below for Python, C++, code generation, web builds, formatting, tests, release builds, and other workflows not covered by the fast Rust recipes.
+
 ### Essential commands
 
 **Building:**
