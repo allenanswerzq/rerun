@@ -852,6 +852,43 @@ significant_drop_tightening = "allow" # An update of parking_lot made this trigg
 # Prefer patching with `branch` over `rev` and let `Cargo.lock` handle the commit hash.
 # That makes it easy to upade with `cargo update -p $CRATE`.
 
+# DataFusion 54.1 backport of compile-time fixes #24325, #24326, #24329, and #24330.
+# TODO: Remove these patches and use the official DataFusion 56+ crates once Lance supports
+# the same DataFusion/Arrow generation. The backport avoids repeated async-trait Send/Sync proofs.
+datafusion = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-catalog = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-catalog-listing = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-common = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-common-runtime = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-datasource = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-datasource-arrow = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-datasource-csv = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-datasource-json = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-datasource-parquet = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-doc = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-execution = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-expr = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-expr-common = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-ffi = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-functions = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-functions-aggregate = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-functions-aggregate-common = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-functions-nested = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-functions-table = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-functions-window = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-functions-window-common = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-macros = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-optimizer = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-physical-expr = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-physical-expr-adapter = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-physical-expr-common = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-physical-optimizer = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-physical-plan = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-proto = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-proto-common = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-pruning = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-session = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
+datafusion-sql = { git = "https://github.com/allenanswerzq/datafusion.git", branch = "rerun-54.1-compile-backport" }
 
 # datafusion = { git = "https://github.com/rerun-io/arrow-datafusion.git", branch = "tsaucer/52.3.0-inner-ffi" }
 # datafusion-catalog = { git = "https://github.com/rerun-io/arrow-datafusion.git", branch = "tsaucer/52.3.0-inner-ffi" }
